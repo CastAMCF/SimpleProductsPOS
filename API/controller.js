@@ -14,7 +14,7 @@ const getProductByID = (req, res) => {
     let id = req.params.id;
 
     pool.query(`SELECT * FROM products WHERE id=${id};`).then(results => {
-        res.status(200).json(results.rows);
+        res.status(200).json(results.rows[0]);
     }).catch(error => {
         res.status(500).json({result: "Ocorreu um erro ao tentar obter o produto"});
         console.log(error);
@@ -26,8 +26,10 @@ const createProduct = (req, res) => {
 
     if (body) {
         pool.query(`INSERT INTO "products"("icon", "name", "quantity", "price") 
-                    VALUES('${body.icon}', '${body.name}', '${body.quantity}', '${body.price}')`).then(results => {
-            res.status(200).json("Produto Adicionado");
+                    VALUES('${body.icon}', '${body.name}', '${body.quantity}', '${body.price}');
+                    SELECT currval('products_id_seq');`).then(results => {
+            res.status(200).json(results[1].rows[0].currval);
+            //console.log("Produto Adicionado");
         }).catch(error => {
             res.status(500).json("Ocorreu um erro ao tentar criar o produto");
             console.log(error);
