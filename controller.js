@@ -43,7 +43,11 @@ const deleteProductByID = (req, res) => {
     let id = req.params.id;
 
     pool.query(`DELETE FROM products WHERE id=${id};`).then(results => {
-        res.status(200).json("Produto eliminado");
+        if (results.rowCount == 1) {
+            res.status(200).json("Produto Eliminado");
+        } else {
+            res.status(200).json("O produto já foi eliminado");
+        }
     }).catch(error => {
         res.status(500).json("Ocorreu um erro ao tentar eliminar o produto");
         console.log(error);
@@ -56,7 +60,11 @@ const updateProductByID = (req, res) => {
     
     if (body) {
         pool.query(`UPDATE products SET icon = '${body.icon}', name = '${body.name}', quantity = '${body.quantity}', price = '${body.price}' WHERE id='${id}'`).then(results => {
-            res.status(200).json("Produto Atualizado");
+            if (results.rowCount == 1) {
+                res.status(200).json("Produto Atualizado");
+            } else {
+                res.status(200).json("O produto já foi eliminado");
+            }
         }).catch(error => {
             res.status(500).json("Ocorreu um erro ao tentar atualizar o produto");
             console.log(error);

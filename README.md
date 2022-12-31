@@ -1,26 +1,19 @@
-# Simple Products
-Simple Products POS duh
+# Simple Products API
+Simple Products API duh
 
-<p align="center">
-  <img src="https://i.imgur.com/zF0u9fS_d.png">
-</p>
-</br>
-<!--https://imgur.com/a/O3MSEhw-->
+## Available Scripts
 
-Um POS mobile para uma melhor gestão de produtos e vendas com um design apelativo e fácil de entender.
+### `node app.js`
 
-</br></br>
-Por enquanto ainda não se encontraram bugs</br>
-<!--*De resto **acho** q tá bom*-->
-</br>
+Runs the app in the development mode.\
+Open [http://localhost:4000/products](http://localhost:4000/products) to view it in your browser.
 
-> A fazer:
-- [ ] Histórico de compras
-- [ ] Adicionar produto (*comentado*)
-- [ ] Editar produto (design pronto *por funcional*)
-- [ ] Eliminar produto
-- [ ] Login (design pronto *por funcional, depende da api*)
-- [ ] Ler imagens externas
+The page will reload when you make changes.\
+You may also see any lint errors in the console.
+
+### `npm install`
+
+Install all the modules needed to run the app.
 
 </br>Nota Final: ??
 </br>
