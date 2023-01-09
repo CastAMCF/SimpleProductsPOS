@@ -5,19 +5,6 @@
     <string name="tab_text_2">Venda Atual</string>
     <string name="tab_text_3">Vendas</string>
 
-    <string name="pao">Pão</string>
-    <string name="broa">Broa</string>
-    <string name="metadePao">Metade Pão/Broa</string>
-    <string name="bolas">Pão Bolas</string>
-    <string name="paoChou">Pão com Chouriço</string>
-    <string name="broaAzeit">Broa de Azeite</string>
-    <string name="bolos">Bolos</string>
-    <string name="pastelChi">Pastel de Chícharo</string>
-    <string name="boloRei">Bolo Rei</string>
-    <string name="boloRainha">Bolo Rainha</string>
-    <string name="abobora">Abóbora</string>
-    <string name="saco">Saco Doce Tradição</string>
-
     <string name="product">Produto</string>
     <string name="name">Nome</string>
     <string name="price">Preço</string>

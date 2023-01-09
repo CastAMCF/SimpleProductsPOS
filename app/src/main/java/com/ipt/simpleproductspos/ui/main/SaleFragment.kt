@@ -134,7 +134,7 @@ class SaleFragment : Fragment() {
 
         val productName = productItem.getName()
         val price = productItem.getPrice()
-        val image = productItem.getIconID()
+        val image = productItem.getIcon()
         val quantity = productItem.getQuantity()
         val correctPrice = price / quantity
 
@@ -163,7 +163,7 @@ class SaleFragment : Fragment() {
         submitButton.text = getString(R.string.define)
         submitButton.setOnClickListener {
             val quantify = quantityEt.text.toString().toInt()
-            val product = Product(image, productName, quantify, correctPrice * quantify)
+            val product = Product(0, image, productName, quantify, correctPrice * quantify)
 
             mainActivity.totalPrice -= price
 
