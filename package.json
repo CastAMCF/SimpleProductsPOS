@@ -1,6 +1,17 @@
 {
   "dependencies": {
     "express": "^4.18.2",
+    "express-recursive-routes": "^2.1.2",
     "pg": "^8.8.0"
-  }
+  },
+  "name": "simpleproductsapi",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
 }

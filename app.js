@@ -1,4 +1,5 @@
 const express = require('express');
+const routeUtils = require('express-recursive-routes');
 
 // express app
 const app = express();
@@ -14,9 +15,8 @@ app.use(function(req, res, next) {
   next();
 });
 
+routeUtils.mountRoutes(app, "./routes/");
+
 // listen for requests
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-const apiRouter = require("./routes")
-app.use('/', apiRouter);
