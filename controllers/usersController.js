@@ -81,7 +81,7 @@ const updateUser = (req, res) => {
 const deleteUser = (req, res) => {
     let username = req.params.username;
 
-    pool.query(`DELETE FROM users WHERE username=${username};`).then(results => {
+    pool.query(`DELETE FROM users WHERE username='${username}';`).then(results => {
         if (results.rowCount == 1) {
             res.status(200).json("Utilizador Eliminado");
         } else {
