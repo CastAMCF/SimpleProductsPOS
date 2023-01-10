@@ -3,9 +3,6 @@ package com.ipt.simpleproductspos.ui.main
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
-import android.graphics.drawable.LayerDrawable
 import android.net.UrlQuerySanitizer
 import android.os.Bundle
 import android.util.Log
@@ -14,13 +11,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.*
-import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.ipt.simpleproductspos.User
 import com.ipt.simpleproductspos.MainActivity
 import com.ipt.simpleproductspos.Product
 import com.ipt.simpleproductspos.R
@@ -34,15 +31,16 @@ private const val ARG_PARAM2 = "param2"
 
 /**
  * A simple [Fragment] subclass.
- * Use the [ProdutosFragment.newInstance] factory method to
+ * Use the [ProductsFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class ProdutosFragment : Fragment() {
+class ProductsFragment : Fragment() {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
     private lateinit var mainActivity: MainActivity
     private lateinit var apiProductsUrl: String
+    private lateinit var session: User
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,9 +48,9 @@ class ProdutosFragment : Fragment() {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
         }
-
         mainActivity = (activity as MainActivity)
         apiProductsUrl = mainActivity.apiProductsUrl
+        session = mainActivity.session
     }
 
     @SuppressLint("SetTextI18n")
@@ -63,19 +61,18 @@ class ProdutosFragment : Fragment() {
         // Inflate the layout for this fragment
         val view: View = inflater.inflate(R.layout.fragment_products, container, false)
 
+        mainActivity.layout = view.findViewById(R.id.product_card_list)
+
+        //btAddProduct
         val addProduct: FloatingActionButton = view.findViewById(R.id.add_product_card)
 
-        addProduct.setOnClickListener { view ->
-            addProductDataDialog(requireContext())
+        if (session.getRole().contains("manager")) {
+            addProduct.setOnClickListener { view ->
+                addProductDataDialog(requireContext())
+            }
+        }else{
+            addProduct.isVisible = false
         }
-
-        val options: FloatingActionButton = view.findViewById(R.id.options)
-
-        options.setOnClickListener { view ->
-            optionsDialog(requireContext())
-        }
-
-        mainActivity.layout = view.findViewById(R.id.product_card_list)
 
         mainActivity.refreshProductsList()
 
@@ -107,7 +104,6 @@ class ProdutosFragment : Fragment() {
         submitButton.setOnClickListener {
             val name = nameEt.text.toString()
             val price = priceEt.text
-            val priceNum = price.toString().replace(",", ".").toDouble()
 
             val sanitizer = UrlQuerySanitizer();
             sanitizer.allowUnregisteredParamaters = true;
@@ -120,6 +116,8 @@ class ProdutosFragment : Fragment() {
 
                 if (price != null)
                     if(price.isNotEmpty() && price.toString().toDoubleOrNull() != null) {
+
+                        val priceNum = price.toString().replace(",", ".").toDouble()
 
                         val jsonObjectRequest = object : StringRequest(
                             Method.POST, apiProductsUrl,
@@ -169,7 +167,7 @@ class ProdutosFragment : Fragment() {
                             },
                             { error ->
                                 Log.e("res", error.toString())
-                                Toast.makeText(context, "Conecte-se à internet para criar o produto", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Conecte-se à internet para adicionar o produto", Toast.LENGTH_SHORT).show()
                             }
                         ) {
                             override fun getBodyContentType(): String {
@@ -198,11 +196,11 @@ class ProdutosFragment : Fragment() {
                         dialog.dismiss()
 
                     }else{
-                        Toast.makeText(context, "O Preço é obrigatório", Toast.LENGTH_SHORT).show()
+                        priceEt.error = "O Preço é obrigatório"
                     }
 
             }else{
-                Toast.makeText(context, "O Nome é obrigatório", Toast.LENGTH_SHORT).show()
+                nameEt.error = "O Nome é obrigatório"
             }
 
         }
@@ -210,29 +208,6 @@ class ProdutosFragment : Fragment() {
         dialog.show()
     }
 
-    private fun optionsDialog(context: Context){
-        val builder = AlertDialog.Builder(context)
-        builder.setTitle("Opções")
-
-        val items = arrayOf("Editar", "Eliminar")
-        val checkedItem = if (mainActivity.deleteOp) 1 else 0
-
-        builder.setSingleChoiceItems(items, checkedItem) { dialog, which ->
-            when (which) {
-                0 -> {
-                    mainActivity.deleteOp = false
-                    dialog.dismiss()
-                }
-                1 -> {
-                    mainActivity.deleteOp = true
-                    dialog.dismiss()
-                }
-            }
-        }
-
-        val typeMatDialog = builder.create()
-        typeMatDialog.show()
-    }
 
     companion object {
         /**
@@ -246,65 +221,12 @@ class ProdutosFragment : Fragment() {
         // TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
-            ProdutosFragment().apply {
+            ProductsFragment().apply {
                 arguments = Bundle().apply {
                     putString(ARG_PARAM1, param1)
                     putString(ARG_PARAM2, param2)
                 }
             }
-
-        fun breadTypeDialog(context: Context, type: String, material: String, image: String) {
-            val builder = AlertDialog.Builder(context)
-            builder.setTitle("Tipo de $type")
-
-            val items = arrayOf(material, "$material com centeio")
-
-            builder.setItems(items) { dialog, which ->
-                addProductDialog(context, Product(0, image, "$type de ${items[which]}", 0, 2.00))
-                dialog.dismiss()
-            }
-
-            val typeMatDialog = builder.create()
-            typeMatDialog.show()
-        }
-
-        fun halfBreadTypeDialog(context: Context) {
-            val builder = AlertDialog.Builder(context)
-            builder.setTitle("Tipo de Metade")
-
-            val items = arrayOf("Trigo", "Trigo com centeio", "Milho", "Milho com centeio")
-
-            builder.setItems(items) { dialog, which ->
-                addProductDialog(context, Product(0, "placeholder", "Metade de ${items[which]}", 0, 1.00))
-                dialog.dismiss()
-            }
-
-            val typeMatDialog = builder.create()
-            typeMatDialog.show()
-        }
-
-        fun sweetTypeDialog(context: Context) {
-            val builder = AlertDialog.Builder(context)
-            builder.setTitle("Tipo de Compra")
-
-            val items = arrayOf("Unidade", "Caixa")
-
-            builder.setItems(items) { dialog, which ->
-                when (which) {
-                    0 -> {
-                        addProductDialog(context, Product(0, "placeholder", "Pastel de Chícharo", 0, 1.20))
-                        dialog.dismiss()
-                    }
-                    1 -> {
-                        addProductDialog(context, Product(0, "placeholder", "Caixa de Pasteis de Chícharo", 0, 6.00))
-                        dialog.dismiss()
-                    }
-                }
-            }
-
-            val typeMatDialog = builder.create()
-            typeMatDialog.show()
-        }
 
         @SuppressLint("SetTextI18n")
         fun addProductDialog(context: Context, productItem: Product) {
@@ -318,7 +240,7 @@ class ProdutosFragment : Fragment() {
 
             val mainActivity = (context as MainActivity)
             val productName = productItem.getName()
-            val price = productItem.getPrice()
+            var price = productItem.getPrice()
             val image = productItem.getIcon()
 
             dialog.findViewById<TextView?>(R.id.product).setText(productName, TextView.BufferType.EDITABLE)
@@ -398,29 +320,45 @@ class ProdutosFragment : Fragment() {
 
             val submitButton: Button = dialog.findViewById(R.id.submit_button)
             submitButton.setOnClickListener {
-                var quantify = quantityEt.text.toString().toInt()
-                var product = Product(0, image, productName, quantify, price * quantify)
+                if (quantityEt.text.toString().isNotEmpty()) {
 
-                if (mainActivity.myProducts.any { x -> x.getName() == productName }){
-                    val i = mainActivity.myProducts.indexOfFirst { x -> x.getName() == productName }
+                    if (priceEt.isVisible) {
+                        if (priceEt.text.toString().isEmpty()) {
+                            priceEt.error = "Preço é obrigatório"
+                            return@setOnClickListener
+                        } else {
+                            price = priceEt.text.toString().replace(",", ".").toDouble()
+                        }
+                    }
 
-                    quantify += mainActivity.myProducts[i].getQuantity()
-                    product = Product(0, image, productName, quantify, price * quantify)
+                    var quantify = quantityEt.text.toString().toInt()
+                    var product = Product(0, image, productName, quantify, price * quantify)
 
-                    mainActivity.totalPrice -= mainActivity.myProducts[i].getPrice()
+                    if (mainActivity.myProducts.any { x -> x.getName() == productName }) {
+                        val i =
+                            mainActivity.myProducts.indexOfFirst { x -> x.getName() == productName }
 
-                    mainActivity.myProducts[i] = product
-                }else{
-                    mainActivity.myProducts.add(product)
+                        quantify += mainActivity.myProducts[i].getQuantity()
+                        product = Product(0, image, productName, quantify, price * quantify)
+
+                        mainActivity.totalPrice -= mainActivity.myProducts[i].getPrice()
+
+                        mainActivity.myProducts[i] = product
+                    } else {
+                        mainActivity.myProducts.add(product)
+                    }
+
+                    mainActivity.totalPrice += price * quantify
+
+                    mainActivity.supportFragmentManager.beginTransaction()
+                        .replace(R.id.bottom_sheet_fragment_parent, BottomSheetFragment()).commit()
+
+                    mainActivity.hideKeyboard()
+
+                    dialog.dismiss()
+                } else {
+                    priceEt.error = "Preço é obrigatório"
                 }
-
-                mainActivity.totalPrice += price * quantify
-
-                mainActivity.supportFragmentManager.beginTransaction().replace(R.id.bottom_sheet_fragment_parent, BottomSheetFragment()).commit()
-
-                mainActivity.hideKeyboard()
-
-                dialog.dismiss()
             }
 
             dialog.show()

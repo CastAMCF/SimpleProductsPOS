@@ -3,18 +3,23 @@
 
     <string name="tab_text_1">Produtos</string>
     <string name="tab_text_2">Venda Atual</string>
-    <string name="tab_text_3">Vendas</string>
 
     <string name="product">Produto</string>
     <string name="name">Nome</string>
     <string name="price">Preço</string>
     <string name="quant">Quantidade</string>
     <string name="add">Adicionar</string>
-    <string name="define">Definir</string>
+    <string name="save">Guardar</string>
+    <string name="create">Criar</string>
+    <string name="role">Cargo</string>
+
+    <string name="user">Utilizador</string>
+    <string name="users">Utilizadores</string>
 
     <string name="login">Login</string>
     <string name="username">Nome de Utilizador</string>
     <string name="pass">Palavra-Passe</string>
+    <string name="passConfirm">Confirmar Palavra-Passe</string>
 
     <string name="pay">Pagamento</string>
     <string name="total">Total</string>

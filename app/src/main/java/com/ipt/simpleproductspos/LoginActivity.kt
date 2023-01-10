@@ -1,27 +1,31 @@
 package com.ipt.simpleproductspos
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import com.ipt.simpleproductspos.databinding.ActivityLoginBinding
 import org.json.JSONObject
+
 
 class LoginActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityLoginBinding
     val apiLoginUrl = "https://nodeapidam-production.up.railway.app/auth"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
 
-        val loginButton = findViewById<View>(R.id.submit_button)
-        val username = findViewById<View>(R.id.nameInput) as EditText
-        val password = findViewById<View>(R.id.passInput) as EditText
+        binding = ActivityLoginBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        val loginButton = binding.submitButton
+        val infoButton = binding.infoButton
+        val username = binding.nameInput
+        val password = binding.passInput
 
         loginButton.setOnClickListener{
             val usernameTxt = username.text.toString()
@@ -77,6 +81,12 @@ class LoginActivity : AppCompatActivity() {
                 password.error = "O Nome de Utilizador é obrigatório"
             }
 
+        }
+
+        infoButton.setOnClickListener{
+            /*val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
+            finish()*/
         }
 
     }

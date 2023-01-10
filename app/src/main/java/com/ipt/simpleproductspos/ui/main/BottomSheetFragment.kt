@@ -96,7 +96,7 @@ class BottomSheetFragment : Fragment() {
                 mainActivity.myProducts.clear()
                 mainActivity.totalPrice = 0.00
 
-                mainActivity.myListAdapter.notifyDataSetChanged()
+                mainActivity.myProductListAdapter.notifyDataSetChanged()
 
             }
 

@@ -5,15 +5,15 @@
     android:layout_margin="16dp">
 
     <TextView
-        android:id="@+id/login"
+        android:id="@+id/user"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/login"
+        android:text="@string/user"
         android:textSize="24sp"
         android:layout_marginBottom="16dp"/>
 
     <EditText
-        android:id="@+id/nameInput"
+        android:id="@+id/editUserName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/username"
@@ -22,7 +22,7 @@
         android:autofillHints="" />
 
     <EditText
-        android:id="@+id/passInput"
+        android:id="@+id/editUserPass"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/pass"
@@ -30,12 +30,26 @@
         android:minHeight="48dp"
         android:autofillHints="" />
 
+    <EditText
+        android:id="@+id/editUserConfirmPass"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/passConfirm"
+        android:inputType="textPassword"
+        android:minHeight="48dp"
+        android:autofillHints="" />
+
+    <Spinner
+        android:id="@+id/editUserRole"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp" />
+
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="@string/login"
+        android:text="@string/save"
         android:textColor="@color/white"
         android:id="@+id/submit_button"/>
-
 </LinearLayout>

@@ -15,12 +15,12 @@ Por enquanto ainda não se encontraram bugs</br>
 </br>
 
 > A fazer:
-- [ ] Histórico de compras
-- [ ] Adicionar produto (*comentado*)
-- [ ] Editar produto (design pronto *por funcional*)
-- [ ] Eliminar produto
-- [ ] Login (design pronto *por funcional, depende da api*)
-- [ ] Ler imagens externas
+- [x] Gestor de Utilizadores
+- [x] Adicionar produto
+- [x] Editar produto
+- [x] Eliminar produto
+- [x] Login
+- [x] Ler imagens externas
 
 </br>Nota Final: ??
 </br>

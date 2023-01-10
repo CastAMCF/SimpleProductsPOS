@@ -6,17 +6,16 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import com.ipt.simpleproductspos.R
 
-private val TAB_TITLES = arrayOf(
+var TAB_TITLES = arrayOf(
     R.string.tab_text_1,
-    R.string.tab_text_2,
-    //R.string.tab_text_3
+    R.string.tab_text_2
 )
 
 /**
  * A [FragmentPagerAdapter] that returns a fragment corresponding to
  * one of the sections/tabs/pages.
  */
-class SectionsPagerAdapter(private val context: Context, fm: FragmentManager)
+class SectionsPagerAdapter(private val context: Context, fm: FragmentManager, private val admin: Boolean)
     : FragmentPagerAdapter(fm) {
 
     override fun getItem(position: Int): Fragment {
@@ -24,11 +23,14 @@ class SectionsPagerAdapter(private val context: Context, fm: FragmentManager)
         // Return a PlaceholderFragment (defined as a static inner class below).
 
         when (position) {
-            0 -> return ProdutosFragment()
-            1 -> return SaleFragment()
-            //2 -> return ProdutosFragment()
+            0 -> return ProductsFragment()
+            1 -> return if (admin) {
+                    UsersFragment()
+                }else{
+                    SaleFragment()
+                }
             else -> {
-                return ProdutosFragment()
+                return ProductsFragment()
             }
         }
     }
@@ -38,7 +40,7 @@ class SectionsPagerAdapter(private val context: Context, fm: FragmentManager)
     }
 
     override fun getCount(): Int {
-        // Show 3 total pages.
+        // Show 2 total pages.
         return 2
     }
 }

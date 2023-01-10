@@ -55,7 +55,7 @@ class SaleFragment : Fragment() {
         mainActivity.hideKeyboard()
 
         val list: ListView = view.findViewById(R.id.productsListView)
-        val myListAdapter =  mainActivity.myListAdapter
+        val myListAdapter =  mainActivity.myProductListAdapter
         list.adapter = myListAdapter
 
         val refreshLayout: SwipeRefreshLayout = view.findViewById(R.id.refreshLayout)
@@ -70,7 +70,7 @@ class SaleFragment : Fragment() {
         list.setOnItemClickListener { adapterView, view, i, l ->
 
             val selectProduct: Product = list.getItemAtPosition(i) as Product
-            editProductDialog(requireContext(), selectProduct, i)
+            editProductDialog(requireContext(), selectProduct, myListAdapter)
 
         }
 
@@ -79,7 +79,7 @@ class SaleFragment : Fragment() {
             val myProducts = mainActivity.myProducts
 
             val builder = AlertDialog.Builder(requireContext())
-            builder.setTitle("Deseja remover esta linha?")
+            builder.setTitle("Deseja eliminar este produto da lista?")
 
             builder.setPositiveButton("Sim") { dialog, which ->
 
@@ -123,7 +123,7 @@ class SaleFragment : Fragment() {
     }
 
     @SuppressLint("SetTextI18n")
-    private fun editProductDialog(context: Context, productItem: Product, index: Int) {
+    private fun editProductDialog(context: Context, productItem: Product, adapter: MainActivity.MyProductListAdapter) {
         val dialog = Dialog(context)
         //We have added a title in the custom layout. So let's disable the default title.
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -151,6 +151,12 @@ class SaleFragment : Fragment() {
                         mainActivity.normalizePrice(correctPrice * text.toString().toInt())
                     } €", TextView.BufferType.EDITABLE)
 
+                }else{
+
+                    dialog.findViewById<TextView?>(R.id.price).setText("Preço: ${
+                        mainActivity.normalizePrice(correctPrice)
+                    } €", TextView.BufferType.EDITABLE)
+
                 }
         }
 
@@ -160,22 +166,28 @@ class SaleFragment : Fragment() {
         priceEt.isVisible = false
 
         val submitButton: Button = dialog.findViewById(R.id.submit_button)
-        submitButton.text = getString(R.string.define)
+        submitButton.text = getString(R.string.save)
         submitButton.setOnClickListener {
-            val quantify = quantityEt.text.toString().toInt()
-            val product = Product(0, image, productName, quantify, correctPrice * quantify)
+            if (quantityEt.text.toString().isNotEmpty()) {
+                val quantify = quantityEt.text.toString().toInt()
+                val product = Product(0, image, productName, quantify, correctPrice * quantify)
 
-            mainActivity.totalPrice -= price
+                mainActivity.totalPrice -= price
 
-            mainActivity.myProducts[index] = product
+                mainActivity.myProducts[mainActivity.myProducts.indexOf(productItem)] = product
 
-            mainActivity.totalPrice += correctPrice * quantify
+                mainActivity.totalPrice += correctPrice * quantify
 
-            mainActivity.supportFragmentManager.beginTransaction().replace(R.id.bottom_sheet_fragment_parent, BottomSheetFragment()).commit()
+                mainActivity.supportFragmentManager.beginTransaction().replace(R.id.bottom_sheet_fragment_parent, BottomSheetFragment()).commit()
 
-            mainActivity.hideKeyboard()
+                mainActivity.hideKeyboard()
 
-            dialog.dismiss()
+                dialog.dismiss()
+
+                adapter.notifyDataSetChanged()
+            } else {
+                quantityEt.error = "Quantidade é obrigatória"
+            }
         }
 
         dialog.show()
