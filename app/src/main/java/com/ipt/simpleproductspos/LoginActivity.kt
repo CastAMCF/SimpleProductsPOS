@@ -84,9 +84,9 @@ class LoginActivity : AppCompatActivity() {
         }
 
         infoButton.setOnClickListener{
-            /*val intent = Intent(this, LoginActivity::class.java)
+            val intent = Intent(this, AboutUsActivity::class.java)
             startActivity(intent)
-            finish()*/
+            finish()
         }
 
     }
