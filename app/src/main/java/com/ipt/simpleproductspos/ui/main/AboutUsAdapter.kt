@@ -11,15 +11,23 @@ import com.ipt.simpleproductspos.R
 import java.util.*
 
 class ViewPagerAdapter(val context: Context, private val imageList: List<Int>) : PagerAdapter() {
-
+    /**
+     * retorna a quantidade de imagens na lista
+     */
     override fun getCount(): Int {
         return imageList.size
     }
 
+    /**
+     * retorna true caso a view e o object tenham a mesma referência
+     */
     override fun isViewFromObject(view: View, `object`: Any): Boolean {
         return view === `object` as RelativeLayout
     }
 
+    /**
+     * Retorna a vista de um item do viewpager
+     */
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
         val mLayoutInflater =
             context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
@@ -38,7 +46,9 @@ class ViewPagerAdapter(val context: Context, private val imageList: List<Int>) :
         return itemView
     }
 
-
+    /**
+     * remove um objeto da view
+     */
     override fun destroyItem(container: ViewGroup, position: Int, `object`: Any) {
         container.removeView(`object` as RelativeLayout)
     }

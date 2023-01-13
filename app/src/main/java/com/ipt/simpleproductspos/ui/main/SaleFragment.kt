@@ -57,7 +57,7 @@ class SaleFragment : Fragment() {
         val list: ListView = view.findViewById(R.id.productsListView)
         val myListAdapter =  mainActivity.myProductListAdapter
         list.adapter = myListAdapter
-
+        //listener para atualizar ao "puxar" para baixo
         val refreshLayout: SwipeRefreshLayout = view.findViewById(R.id.refreshLayout)
         refreshLayout.setOnRefreshListener {
 
@@ -66,14 +66,14 @@ class SaleFragment : Fragment() {
 
             refreshLayout.isRefreshing = false
         }
-
+        //listener para atualizar um produto do carrinho ao pressionar
         list.setOnItemClickListener { adapterView, view, i, l ->
 
             val selectProduct: Product = list.getItemAtPosition(i) as Product
             editProductDialog(requireContext(), selectProduct, myListAdapter)
 
         }
-
+        //listener para remover um produto do carrinho ao manter pressionado
         list.setOnItemLongClickListener { adapterView, view, i, l ->
 
             val myProducts = mainActivity.myProducts
@@ -85,7 +85,7 @@ class SaleFragment : Fragment() {
 
                 mainActivity.totalPrice -= myProducts[i].getPrice()
                 mainActivity.supportFragmentManager.beginTransaction().replace(R.id.bottom_sheet_fragment_parent, BottomSheetFragment()).commit()
-
+                //removemos o produto e atualizamos a lista
                 myProducts.removeAt(i)
                 myListAdapter.notifyDataSetChanged()
             }
@@ -96,7 +96,7 @@ class SaleFragment : Fragment() {
 
             true
         }
-
+        //refazer o menu de pagamento
         mainActivity.supportFragmentManager.beginTransaction().replace(R.id.bottom_sheet_fragment_parent, BottomSheetFragment()).commit()
 
         return view
@@ -122,14 +122,17 @@ class SaleFragment : Fragment() {
             }
     }
 
+    /**
+     * Popup para adicionar um pedido ao carrinho de compras
+     */
     @SuppressLint("SetTextI18n")
     private fun editProductDialog(context: Context, productItem: Product, adapter: MainActivity.MyProductListAdapter) {
         val dialog = Dialog(context)
-        //We have added a title in the custom layout. So let's disable the default title.
+        //Desativar titulo default
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        //The user will be able to cancel the dialog bu clicking anywhere outside the dialog.
+        //Permitir o fecho do popup
         dialog.setCancelable(true)
-        //Mention the name of the layout of your custom dialog.
+        //Layout a utilizar no popup
         dialog.setContentView(R.layout.add_product)
 
         val productName = productItem.getName()
@@ -141,18 +144,17 @@ class SaleFragment : Fragment() {
         dialog.findViewById<TextView?>(R.id.product).setText(productName, TextView.BufferType.EDITABLE)
         dialog.findViewById<TextView?>(R.id.price).setText("Preço: ${mainActivity.normalizePrice(correctPrice)} €", TextView.BufferType.EDITABLE)
 
-        //Initializing the views of the dialog
         val quantityEt: EditText = dialog.findViewById(R.id.quantity)
         quantityEt.doOnTextChanged { text, start, before, count ->
             if (text != null)
                 if(text.isNotEmpty() && text.toString().toDoubleOrNull() != null) {
-
+                    //normalizar o preço consoante a quantidade introduzida
                     dialog.findViewById<TextView?>(R.id.price).setText("Preço: ${
                         mainActivity.normalizePrice(correctPrice * text.toString().toInt())
                     } €", TextView.BufferType.EDITABLE)
 
                 }else{
-
+                    //normalizar o preço
                     dialog.findViewById<TextView?>(R.id.price).setText("Preço: ${
                         mainActivity.normalizePrice(correctPrice)
                     } €", TextView.BufferType.EDITABLE)
@@ -164,14 +166,14 @@ class SaleFragment : Fragment() {
 
         val priceEt: EditText = dialog.findViewById(R.id.priceInput)
         priceEt.isVisible = false
-
+        //listener para adicionar um produto ao carrinho
         val submitButton: Button = dialog.findViewById(R.id.submit_button)
         submitButton.text = getString(R.string.save)
         submitButton.setOnClickListener {
             if (quantityEt.text.toString().isNotEmpty()) {
                 val quantify = quantityEt.text.toString().toInt()
                 val product = Product(0, image, productName, quantify, correctPrice * quantify)
-
+                //atualizar o preço do checkout
                 mainActivity.totalPrice -= price
 
                 mainActivity.myProducts[mainActivity.myProducts.indexOf(productItem)] = product
@@ -183,7 +185,7 @@ class SaleFragment : Fragment() {
                 mainActivity.hideKeyboard()
 
                 dialog.dismiss()
-
+                //atualizar o menu de checkout
                 adapter.notifyDataSetChanged()
             } else {
                 quantityEt.error = "Quantidade é obrigatória"

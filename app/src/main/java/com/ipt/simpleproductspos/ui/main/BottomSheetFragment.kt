@@ -41,6 +41,9 @@ class BottomSheetFragment : Fragment() {
         mainActivity = (activity as MainActivity)
     }
 
+    /**
+     * Atualiza e normaliza o preço do menu de checkout
+     */
     @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -101,7 +104,7 @@ class BottomSheetFragment : Fragment() {
             }
 
             mainActivity.hideKeyboard()
-
+            //atualiza e substitui o menu de checkout
             mainActivity.supportFragmentManager.beginTransaction().replace(R.id.bottom_sheet_fragment_parent, BottomSheetFragment()).commit()
 
         }

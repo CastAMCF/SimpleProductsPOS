@@ -64,7 +64,7 @@ class UsersFragment : Fragment() {
         val list: ListView = view.findViewById(R.id.usersListView)
         val myListAdapter =  mainActivity.myUserListAdapter
         list.adapter = myListAdapter
-
+        //atualizar a lista ao "puxar" para baixo
         val refreshLayout: SwipeRefreshLayout = view.findViewById(R.id.refreshLayout)
         refreshLayout.setOnRefreshListener {
 
@@ -72,14 +72,14 @@ class UsersFragment : Fragment() {
 
             refreshLayout.isRefreshing = false
         }
-
+        //listener ao pressionar em um user para o editar
         list.setOnItemClickListener { adapterView, view, i, l ->
 
             val selectUser: User = list.getItemAtPosition(i) as User
             editUserDialog(requireContext(), selectUser, myListAdapter)
 
         }
-
+        //listener ao manter premido em um user para o remover
         list.setOnItemLongClickListener { adapterView, view, i, l ->
 
             val selectUser: User = list.getItemAtPosition(i) as User
@@ -88,7 +88,7 @@ class UsersFragment : Fragment() {
             true
         }
 
-        //btAddUser
+        //botão flutuante para adicionar um novo user
         val addUser: FloatingActionButton = view.findViewById(R.id.add_user_card)
 
         addUser.setOnClickListener { view ->
@@ -118,19 +118,22 @@ class UsersFragment : Fragment() {
             }
     }
 
+    /**
+     * Popup para adicionar um utilizador
+     */
     @SuppressLint("SetTextI18n")
     private fun addUserDialog(context: Context, listAdapter: MainActivity.MyUserListAdapter) {
         val dialog = Dialog(context)
-        //We have added a title in the custom layout. So let's disable the default title.
+        //Remover título default
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        //The user will be able to cancel the dialog bu clicking anywhere outside the dialog.
+        //Permitir o fecho do popup
         dialog.setCancelable(true)
-        //Mention the name of the layout of your custom dialog.
+        //Layout a ser utilizado no popup
         dialog.setContentView(R.layout.add_user)
 
         dialog.findViewById<TextView?>(R.id.user).setText("Criar Utilizador", TextView.BufferType.EDITABLE)
 
-        //Initializing the views of the dialog
+
         val roles: ArrayList<String> = arrayListOf()
         roles.add("Empregado")
         roles.add("Gerente")
@@ -144,14 +147,14 @@ class UsersFragment : Fragment() {
         val usernameEt: EditText = dialog.findViewById(R.id.addUserName)
         val passEt: EditText = dialog.findViewById(R.id.addUserPass)
         val passConfirmEt: EditText = dialog.findViewById(R.id.editUserConfirmPass)
-
+        //listener para adicionar novo user
         val submitButton: Button = dialog.findViewById(R.id.submit_button)
         submitButton.setOnClickListener {
             val usernameText = usernameEt.text.toString()
             val pass = passEt.text.toString()
             val passConfirm = passConfirmEt.text.toString()
             var role = spinner.selectedItem.toString()
-
+            //alterar o texto da role para o correto
             role = if (role.contains("Gerente")) {
                 "manager"
             }else{
@@ -165,16 +168,17 @@ class UsersFragment : Fragment() {
                 if (pass.isNotEmpty()) {
 
                     if (pass == passConfirm) {
-
+                        //preparar chamada ao API
                         val jsonObjectRequest = object : StringRequest(
                             Method.POST, apiUsersUrl,
                             { response ->
 
                                 //Log.e("res", response.toString())
-
+                                //caso a resposta do api contenha "existe um utilizador" então já existe um utilizador com o nome desejado
                                 if (response.trim('"').contains("existe um utilizador")){
                                     Toast.makeText(context, response.trim('"'), Toast.LENGTH_SHORT).show()
                                 } else {
+                                    //caso não exista já um utilizador com esse nome, cria-se o utilizador e adicionamo-lo à lista
                                     Toast.makeText(context, "Utilizador Criado", Toast.LENGTH_SHORT).show()
 
                                     myUsers.add(User(response.trim('"').toInt(), usernameText, pass, role))
@@ -194,7 +198,7 @@ class UsersFragment : Fragment() {
                             override fun getBodyContentType(): String {
                                 return "application/json; charset=utf-8"
                             }
-
+                            //carregar as variáveis que pretendemos enviar para o API no body do pedido
                             override fun getBody(): ByteArray {
                                 val jsonBody = JSONObject()
                                 jsonBody.put("username", usernameText)
@@ -205,7 +209,7 @@ class UsersFragment : Fragment() {
 
                         }
 
-                        // Access the RequestQueue through your singleton class.
+                        //Adicionar o pedido á fila
                         Volley.newRequestQueue(context).add(jsonObjectRequest)
 
                     }else{
@@ -226,14 +230,17 @@ class UsersFragment : Fragment() {
         dialog.show()
     }
 
+    /**
+     * Popup para edição de um user
+     */
     @SuppressLint("SetTextI18n")
     private fun editUserDialog(context: Context, user: User, listAdapter: MainActivity.MyUserListAdapter) {
         val dialog = Dialog(context)
-        //We have added a title in the custom layout. So let's disable the default title.
+        //remover o titulo default
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        //The user will be able to cancel the dialog bu clicking anywhere outside the dialog.
+        //Permitir o fecho do popup
         dialog.setCancelable(true)
-        //Mention the name of the layout of your custom dialog.
+        //Layout a utilizar no popup
         dialog.setContentView(R.layout.edit_user)
 
         dialog.findViewById<TextView?>(R.id.user).setText("Editar Utilizador", TextView.BufferType.EDITABLE)
@@ -241,7 +248,6 @@ class UsersFragment : Fragment() {
         val userName = user.getUsername()
         dialog.findViewById<TextView?>(R.id.editUserName).setText(userName, TextView.BufferType.EDITABLE)
 
-        //Initializing the views of the dialog
         val roles: ArrayList<String> = arrayListOf()
         if (user.getRole().contains("manager")) {
             roles.add("Gerente")
@@ -260,14 +266,14 @@ class UsersFragment : Fragment() {
         val usernameEt: EditText = dialog.findViewById(R.id.editUserName)
         val passEt: EditText = dialog.findViewById(R.id.editUserPass)
         val passConfirmEt: EditText = dialog.findViewById(R.id.editUserConfirmPass)
-
+        //listener para edição do user
         val submitButton: Button = dialog.findViewById(R.id.submit_button)
         submitButton.setOnClickListener {
             val usernameText = usernameEt.text.toString()
             var pass = passEt.text.toString()
             var passConfirm = passConfirmEt.text.toString()
             var role = spinner.selectedItem.toString()
-
+            //alterar para o correto
             role = if (role.contains("Gerente")) {
                 "manager"
             }else{
@@ -288,14 +294,14 @@ class UsersFragment : Fragment() {
                     if (pass == passConfirm) {
 
                         val url = "${apiUsersUrl}/${user.getUsername()}"
-
+                        //preparar pedido para a API
                         val jsonObjectRequest = object : StringRequest(
                             Method.PUT, url,
                             { response ->
 
                                 //Log.e("res", response.toString())
                                 Toast.makeText(context, response.trim('"'), Toast.LENGTH_SHORT).show()
-
+                                //caso a resposta do API contenha "foi eliminado" removemos o user e atualizamos a lista
                                 if (response.trim('"').contains("foi eliminado")){
                                     myUsers.remove(user)
                                 }
@@ -316,7 +322,7 @@ class UsersFragment : Fragment() {
                             override fun getBodyContentType(): String {
                                 return "application/json; charset=utf-8"
                             }
-
+                            //carregar as variaveis que pretendemos enviar para o API no body do pedido
                             override fun getBody(): ByteArray {
                                 val jsonBody = JSONObject()
                                 jsonBody.put("username", usernameText)
@@ -327,7 +333,7 @@ class UsersFragment : Fragment() {
 
                         }
 
-                        // Access the RequestQueue through your singleton class.
+                        //Adicionar o pedido à fila
                         Volley.newRequestQueue(context).add(jsonObjectRequest)
 
                         dialog.dismiss()
@@ -350,6 +356,9 @@ class UsersFragment : Fragment() {
         dialog.show()
     }
 
+    /**
+     * Popup para remover um user
+     */
     private fun removeUserDialog(context: Context, user: User, listAdapter: MainActivity.MyUserListAdapter) {
         val builder = AlertDialog.Builder(context)
         builder.setTitle("Deseja eliminar este utilizador?")
@@ -359,11 +368,11 @@ class UsersFragment : Fragment() {
         builder.setPositiveButton("Sim") { dialog, which ->
 
             val url = "${apiUsersUrl}/${user.getUsername()}"
-
+            //preparar pedido para o API
             val jsonArrayRequest = StringRequest(
                 Request.Method.DELETE, url,
                 { response ->
-
+                    //removemos o user e atualizamos a lista
                     myUsers.remove(user)
                     listAdapter.notifyDataSetChanged()
 
@@ -379,7 +388,7 @@ class UsersFragment : Fragment() {
                 }
             )
 
-            // Access the RequestQueue through your singleton class.
+            //Adicionamos o pedido à fila
             Volley.newRequestQueue(context).add(jsonArrayRequest)
         }
 

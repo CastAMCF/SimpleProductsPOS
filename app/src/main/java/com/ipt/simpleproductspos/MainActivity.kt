@@ -46,10 +46,12 @@ import java.io.ByteArrayOutputStream
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    //Sessão passada do login
     lateinit var session: User
+    //vars para conectar ao api
     val apiProductsUrl = "https://nodeapidam-production.up.railway.app/products"
     val apiUsersUrl = "https://nodeapidam-production.up.railway.app/users"
-
+    //produtos a mostrar
     private var dataProducts: ArrayList<Product> = arrayListOf()
     lateinit var layout: GridLayout
 
@@ -60,8 +62,12 @@ class MainActivity : AppCompatActivity() {
     var myProducts: ArrayList<Product> = arrayListOf()
     var totalPrice: Double = 0.0
 
+    //preparar os launchers para as chamadas a:
+    //Escolha de imagens da galeria
     lateinit var pickLauncher: ActivityResultLauncher<Intent>
+    //Utilização da camera
     lateinit var cameraLauncher: ActivityResultLauncher<Intent>
+    //Autorização de permissões
     lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
     lateinit var addImage: ImageView
 
@@ -70,14 +76,16 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        //Carregar a sessão passada do login
         session = intent.getSerializableExtra("sessao") as User
+
 
         myProductListAdapter = MyProductListAdapter(this, R.layout.item_product_view, myProducts)
         myUserListAdapter = MyUserListAdapter(this, R.layout.item_user_view, myUsers)
-
+        //Guardar imagem nas shared preferences
         saveImage("placeholder", BitmapFactory.decodeResource(resources, R.drawable.placeholder))
 
+        //Alterar o nome dos fragmentos baseado na role do utilizador atual
         TAB_TITLES = if (session.getRole().contains("manager")) {
             arrayOf(
                 R.string.tab_text_1,
@@ -130,14 +138,11 @@ class MainActivity : AppCompatActivity() {
                 ActivityResultContracts.RequestPermission()
             ) { isGranted: Boolean ->
                 if (isGranted) {
-                    // Permission is granted. Continue the action or workflow in your app.
+                    // caso a permissão seja concedida, procedemos com a inicialização
                     pickLauncher.launch(requestPermissionIntent)
                 } else {
-                    // Explain to the user that the feature is unavailable because the
-                    // feature requires a permission that the user has denied. At the
-                    // same time, respect the user's decision. Don't link to system
-                    // settings in an effort to convince the user to change their decision.
 
+                    // caso a permissão seja negada, informamos que não é possível continuar com o pretendido
                     val alertBuilder = AlertDialog.Builder(this)
                     alertBuilder.setMessage("Não é possível escolher imagens guardadas, conceda a permissão e tente novamente")
                         .setCancelable(false)
@@ -154,7 +159,7 @@ class MainActivity : AppCompatActivity() {
             }
 
         val logoutButton = binding.logoutButton
-
+        //Listener para logout, retorna para o login e reseta a sessão
         logoutButton.setOnClickListener{
             session = User(0,"","","")
             val intent = Intent(this, LoginActivity::class.java)
@@ -164,11 +169,17 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    /**
+     * normaliza o preço, substitui ',' por '.' e formata com 2 casas decimais
+     */
     fun normalizePrice(price: Double): String {
         val text2D = String.format("%.2f", price).replace(",", ".")
         return text2D.split('.')[0] + "," + text2D.split('.')[1].padEnd(2, '0')
     }
 
+    /**
+     * Esconde o teclado
+     */
     fun hideKeyboard(){
         val view = currentFocus
         if (view != null){
@@ -177,6 +188,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Guarda uma imagem no shared preferences
+     */
     fun saveImage(icon: String, image: Bitmap){
         val baos = ByteArrayOutputStream()
         image.compress(Bitmap.CompressFormat.JPEG, 100, baos)
@@ -190,32 +204,36 @@ class MainActivity : AppCompatActivity() {
         edit.apply()
     }
 
+    /**
+     * Popup de edição de um produto
+     */
     @SuppressLint("SetTextI18n")
     private fun editProductDataDialog(
         context: Context, view: View, product: Product, imageView: ImageView, but: Button, nameView: TextView, priceView: TextView
     ) {
         val dialog = Dialog(context)
-        //We have added a title in the custom layout. So let's disable the default title.
+        //Desativar o título default
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        //The user will be able to cancel the dialog bu clicking anywhere outside the dialog.
+        //Possibilidade de fechar o popup
         dialog.setCancelable(true)
-        //Mention the name of the layout of your custom dialog.
+        //Layout do popup
         dialog.setContentView(R.layout.edit_product)
 
         dialog.findViewById<TextView?>(R.id.product).setText("Editar Produto", TextView.BufferType.EDITABLE)
 
-        //Initializing the views of the dialog
+        //Variáveis utilizadas no popup
         val nameEt: EditText = dialog.findViewById(R.id.nameInput)
         val priceEt: EditText = dialog.findViewById(R.id.priceInput)
         addImage = dialog.findViewById(R.id.image)
-
+        //Popup para alterar imagem ao carregar na imagem atual
         addImage.setOnClickListener{ chooseImgTypeDialog(context) }
-
+        //Definir os valores atuais
         nameEt.setText(product.getName(), TextView.BufferType.EDITABLE)
         priceEt.setText(product.getPrice().toString(), TextView.BufferType.EDITABLE)
         addImage.setImageBitmap(product.getBitmap(context))
 
         val submitButton: Button = dialog.findViewById(R.id.submit_button)
+        //listener para submeter alterações no produto
         submitButton.setOnClickListener {
             val name = nameEt.text.toString()
             val price = priceEt.text
@@ -230,22 +248,21 @@ class MainActivity : AppCompatActivity() {
 
                         val url = "${apiProductsUrl}/${product.getID()}"
                         val priceNum = price.toString().replace(",", ".").toDouble()
-
+                        //Efetuar pedido ao API
                         val jsonObjectRequest = object : StringRequest(
                             Method.PUT, url,
                             { response ->
 
-                                //Log.e("res", response.toString())
-                                Toast.makeText(context, response.trim('"'), Toast.LENGTH_SHORT).show()
 
+                                //Caso a resposta do API contenha "foi eliminado, remove-se a vista do produto e refresca-se a lista dos produtos
                                 if (response.trim('"').contains("foi eliminado")){
                                     removeProductView(view, product)
                                     refreshProductsList()
                                 } else {
                                     val updateProduct = Product(product.getID(), icon, name, 0, priceNum)
-
+                                    //gera a view para o produto atualizado
                                     generateProductView(updateProduct, imageView, but, nameView, priceView, view)
-
+                                    //Caso o produto atualizado esteja no carrinho de compras, atualizamos o preço do mesmo
                                     if (myProducts.any { x -> x.getName() == product.getName() }){
                                         val i = myProducts.indexOfFirst { x -> x.getName() == product.getName() }
 
@@ -265,6 +282,7 @@ class MainActivity : AppCompatActivity() {
 
                             },
                             { error ->
+                                //sem conexão
                                 Log.e("res", error.toString())
                                 Toast.makeText(context, "Conecte-se à internet para editar o produto", Toast.LENGTH_SHORT).show()
 
@@ -274,7 +292,7 @@ class MainActivity : AppCompatActivity() {
                             override fun getBodyContentType(): String {
                                 return "application/json; charset=utf-8"
                             }
-
+                            //Carregar as variáveis que pretendemos enviar para a API no body.
                             override fun getBody(): ByteArray {
                                 val jsonBody = JSONObject()
                                 jsonBody.put("icon", icon)
@@ -286,14 +304,14 @@ class MainActivity : AppCompatActivity() {
 
                         }
 
-                        // Access the RequestQueue through your singleton class.
+                        // Acedemos à fila e adicionamos o nosso pedido
                         Volley.newRequestQueue(context).add(jsonObjectRequest)
 
                         //refreshProductsList()
 
 
                         hideKeyboard()
-
+                        //fechamos o popup
                         dialog.dismiss()
 
                     }else{
@@ -309,6 +327,9 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    /**
+     * Mostra um popup para remover um dado produto da view e da base de dados
+     */
     private fun removeProductDataDialog(context: Context, view: View, product: Product) {
         val builder = AlertDialog.Builder(context)
         builder.setTitle("Deseja eliminar este produto?")
@@ -316,13 +337,13 @@ class MainActivity : AppCompatActivity() {
         builder.setPositiveButton("Sim") { dialog, which ->
 
             val url = "${apiProductsUrl}/${product.getID()}"
-
+            //preparar pedido para o API
             val jsonArrayRequest = StringRequest(
                 Request.Method.DELETE, url,
                 { response ->
-
+                    //
                     removeProductView(view, product)
-
+                    //Caso o produto tenha sido eliminado da bd, atualizamos a lista
                     if (response.trim('"').contains("foi eliminado"))
                         refreshProductsList()
 
@@ -330,14 +351,14 @@ class MainActivity : AppCompatActivity() {
 
                 },
                 { error ->
-
+                    //sem internet
                     Toast.makeText(context, "Conecte-se à internet para eliminar o produto", Toast.LENGTH_SHORT).show()
                     refreshProductsList()
 
                 }
             )
 
-            // Access the RequestQueue through your singleton class.
+            // Acedemos à fila e adicionamos o nosso pedido
             Volley.newRequestQueue(context).add(jsonArrayRequest)
         }
 
@@ -346,6 +367,9 @@ class MainActivity : AppCompatActivity() {
         builder.show()
     }
 
+    /**
+     * Adiciona um produto à vista
+     */
     fun addProductView(dataProduct: Product): View {
         val productView: View = layoutInflater.inflate(R.layout.product_card, null)
 
@@ -361,6 +385,9 @@ class MainActivity : AppCompatActivity() {
         return productView
     }
 
+    /**
+     * Remove um produto da vista
+     */
     private fun removeProductView(view: View, product: Product) {
 
         layout.removeView(view)
@@ -379,6 +406,9 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    /**
+     * Cria uma vista de um produto
+     */
     @SuppressLint("SetTextI18n")
     private fun generateProductView(product: Product, imageView: ImageView, but: Button, nameView: TextView, priceView: TextView, view: View) {
 
@@ -392,7 +422,7 @@ class MainActivity : AppCompatActivity() {
         } €"
 
         nameView.text = product.getName()
-
+        //manter premido para remover produto caso seja gerente
         but.setOnLongClickListener {
 
             if (session.getRole().contains("manager")) {
@@ -401,7 +431,7 @@ class MainActivity : AppCompatActivity() {
 
             true
         }
-
+        //manter premido para atualizar produto caso seja gerente
         but.setOnClickListener{
 
             if (session.getRole().contains("manager")) {
@@ -414,6 +444,9 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    /**
+     * Inicia o popup para escolher uma imagem/capturar uma com a camara
+     */
     fun chooseImgTypeDialog(context: Context) {
         val builder = AlertDialog.Builder(context)
         builder.setTitle("Adiconar Imagem")
@@ -465,6 +498,9 @@ class MainActivity : AppCompatActivity() {
         typeMatDialog.show()
     }
 
+    /**
+     * Converte uma imagem num bitmap
+     */
     fun convertToBitmap(drawable: Drawable, widthPixels: Int, heightPixels: Int): Bitmap {
         val bitmap = Bitmap.createBitmap(widthPixels, heightPixels, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -473,10 +509,13 @@ class MainActivity : AppCompatActivity() {
         return bitmap
     }
 
+    /**
+     * Atualiza a lista de produtos
+     */
     fun refreshProductsList() {
         dataProducts.clear()
         layout.removeAllViews()
-
+        //Preparar pedido para a API
         val jsonArrayRequest = JsonArrayRequest(
             Request.Method.GET, apiProductsUrl, null,
             { response ->
@@ -509,13 +548,16 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
-        // Access the RequestQueue through your singleton class.
+        // Adicionar o pedido à fila
         Volley.newRequestQueue(this).add(jsonArrayRequest)
     }
 
+    /**
+     * Atualiza a lista de users
+     */
     fun refreshUsersList() {
         myUsers.clear()
-
+        //Preparar pedido para a API
         val jsonArrayRequest = JsonArrayRequest(
             Request.Method.GET, "${apiUsersUrl}?username=${session.getUsername()}&password=${session.getPassword()}", null,
             { response ->
@@ -529,7 +571,7 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
-        // Access the RequestQueue through your singleton class.
+        // Adicionar pedido à fila
         Volley.newRequestQueue(this).add(jsonArrayRequest)
     }
 
@@ -537,29 +579,29 @@ class MainActivity : AppCompatActivity() {
         ArrayAdapter<Product>(context, layoutResource, myProducts) {
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-            // Make sure we have a view to work with (may have been given null)
+            // Utilizar a view passada, caso contrário encontrá-la
             var itemView = convertView
             if (itemView == null) {
                 itemView = LayoutInflater.from(context).inflate(R.layout.item_product_view, parent, false)
             }
 
-            // Find the product to work with.
+            // Produto que vamos usar
             val currentProduct: Product = myProducts[position]
 
-            // Fill the view
+            // Preenche a view
             val imageView: ImageView = itemView?.findViewById<View>(R.id.item_icon) as ImageView
             imageView.setImageBitmap(currentProduct.getBitmap(context))
 
-            // Name:
+            // nome
             val nameText = itemView.findViewById<View>(R.id.item_txtProduct) as TextView
             nameText.text = currentProduct.getName()
 
-            // Price:
+            // preço
             val priceText = itemView.findViewById<View>(R.id.item_txtPrice) as TextView
             val text2D = String.format("%.2f", currentProduct.getPrice()).replace(",", ".")
             priceText.text = text2D.split('.')[0] + "," + text2D.split('.')[1].padEnd(2, '0') + " €"
 
-            // Quantity:
+            // quantidade
             val quantityText = itemView.findViewById<View>(R.id.item_txtQuantity) as TextView
             quantityText.text = currentProduct.getQuantity().toString()
 
@@ -571,28 +613,27 @@ class MainActivity : AppCompatActivity() {
         ArrayAdapter<User>(context, layoutResource, myUsers) {
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-            // Make sure we have a view to work with (may have been given null)
+            // Utilizar a view passada, caso contrário encontrá-la
             var itemView = convertView
             if (itemView == null) {
                 itemView = LayoutInflater.from(context).inflate(R.layout.item_user_view, parent, false)
             }
 
-            // Find the product to work with.
+            // User que vamos usar
             val currentUser: User = myUsers[position]
 
-            // Fill the view
-            // Name:
+            // nome
             val nameText = itemView?.findViewById<View>(R.id.item_txtUsername) as TextView
             nameText.text = currentUser.getUsername()
 
-            // Password:
+            // password
             val passText = itemView.findViewById<View>(R.id.item_txtPass) as TextView
             passText.text = currentUser.getPassword()
 
-            // Role:
+            // role
             val roleText = itemView.findViewById<View>(R.id.item_txtRole) as TextView
             var role = currentUser.getRole()
-
+            //Display da role mais "user friendly"
             role = if (role.contains("manager")) {
                 "Gerente"
             }else{

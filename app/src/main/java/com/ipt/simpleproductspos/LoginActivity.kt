@@ -21,28 +21,30 @@ class LoginActivity : AppCompatActivity() {
 
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        //botoes utilizados na view
         val loginButton = binding.submitButton
         val infoButton = binding.infoButton
         val username = binding.nameInput
         val password = binding.passInput
-
+        //listener do login
         loginButton.setOnClickListener{
             val usernameTxt = username.text.toString()
             val passwordTxt = password.text.toString()
 
             if (usernameTxt.isNotEmpty()) {
                 if (passwordTxt.isNotEmpty()) {
-
+                    //preparar o pedido para o API
                     val jsonObjectRequest = object : StringRequest(
                         Method.POST, apiLoginUrl,
                         { response ->
 
                             val res = response.trim('"').split(';')
-
+                            //caso a resposta contanha "employee" ou "manager" o login foi sucedido
                             if (response.contains("employee") || response.contains("manager")){
+                                //preparar a sessão para passar para a outra atividade
                                 val session = User(res[0].toInt(), usernameTxt, passwordTxt, res[1])
                                 val intent = Intent(this, MainActivity::class.java)
+                                //incluir a sessão no intent
                                 intent.putExtra("sessao", session)
                                 finish()
                                 startActivity(intent)
@@ -59,7 +61,7 @@ class LoginActivity : AppCompatActivity() {
                         override fun getBodyContentType(): String {
                             return "application/json; charset=utf-8"
                         }
-
+                        //adicionar as variáveis que pretendemos enviar para o API no body do pedido
                         override fun getBody(): ByteArray {
                             val jsonBody = JSONObject()
                             jsonBody.put("username", usernameTxt)
@@ -69,7 +71,7 @@ class LoginActivity : AppCompatActivity() {
 
 
                     }
-
+                    //Adicionar o pedido á fila
                     Volley.newRequestQueue(this).add(jsonObjectRequest)
 
 
@@ -82,7 +84,7 @@ class LoginActivity : AppCompatActivity() {
             }
 
         }
-
+        //listener do botão about us
         infoButton.setOnClickListener{
             val intent = Intent(this, AboutUsActivity::class.java)
             startActivity(intent)

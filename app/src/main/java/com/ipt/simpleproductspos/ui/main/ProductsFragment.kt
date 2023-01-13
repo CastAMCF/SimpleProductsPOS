@@ -58,14 +58,13 @@ class ProductsFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         val view: View = inflater.inflate(R.layout.fragment_products, container, false)
 
         mainActivity.layout = view.findViewById(R.id.product_card_list)
 
-        //btAddProduct
+        //Botão para adicionar um novo produto
         val addProduct: FloatingActionButton = view.findViewById(R.id.add_product_card)
-
+        //Caso o user seja gerente, adicionamos um listener para adicionar um produto, caso contrário escondemos o botão
         if (session.getRole().contains("manager")) {
             addProduct.setOnClickListener { view ->
                 addProductDataDialog(requireContext())
@@ -73,25 +72,27 @@ class ProductsFragment : Fragment() {
         }else{
             addProduct.isVisible = false
         }
-
+        //atualizar a lista de produtos
         mainActivity.refreshProductsList()
 
         return view
     }
 
+    /**
+     * Popup para adicionar um novo produto
+     */
     @SuppressLint("SetTextI18n")
     private fun addProductDataDialog(context: Context) {
         val dialog = Dialog(context)
-        //We have added a title in the custom layout. So let's disable the default title.
+        //Desativar titulo default
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        //The user will be able to cancel the dialog bu clicking anywhere outside the dialog.
+        //Permitir o fecho do popup
         dialog.setCancelable(true)
-        //Mention the name of the layout of your custom dialog.
+        //Layout a ser utilizado no popup
         dialog.setContentView(R.layout.edit_product)
 
         dialog.findViewById<TextView?>(R.id.product).setText("Adicionar Produto", TextView.BufferType.EDITABLE)
 
-        //Initializing the views of the dialog
         val nameEt: EditText = dialog.findViewById(R.id.nameInput)
         val priceEt: EditText = dialog.findViewById(R.id.priceInput)
         mainActivity.addImage = dialog.findViewById(R.id.image)
@@ -100,7 +101,7 @@ class ProductsFragment : Fragment() {
 
         val submitButton: Button = dialog.findViewById(R.id.submit_button)
         submitButton.text = "Adicionar"
-
+        //listener para adicionar um novo produto
         submitButton.setOnClickListener {
             val name = nameEt.text.toString()
             val price = priceEt.text
@@ -110,7 +111,6 @@ class ProductsFragment : Fragment() {
             sanitizer.parseUrl("http://example.com/?name=${name}");
             var icon = sanitizer.getValue("name")
 
-            //layout.removeViewAt(0)
 
             if(name.isNotEmpty() && name != "placeholder") {
 
@@ -118,29 +118,27 @@ class ProductsFragment : Fragment() {
                     if(price.isNotEmpty() && price.toString().toDoubleOrNull() != null) {
 
                         val priceNum = price.toString().replace(",", ".").toDouble()
-
+                        //preparar pedido para o API
                         val jsonObjectRequest = object : StringRequest(
                             Method.POST, apiProductsUrl,
                             { addResponse ->
 
-                                //Log.e("res", response.toString())
-
                                 val url = "${apiProductsUrl}/${addResponse.trim('"').toInt()}"
                                 icon += addResponse.trim('"').toInt()
-
+                                //preparar segundo pedido para o api com a resposta do primeiro pedido
                                 val jsonObjectRequest = object : StringRequest(
                                     Method.PUT, url,
                                     { response ->
 
                                         Toast.makeText(context, "Produto Adicionado", Toast.LENGTH_SHORT).show()
-
+                                        //converter o icon devolvido pelo primeiro pedido em um bitmap
                                         mainActivity.saveImage(icon,
                                             mainActivity.convertToBitmap(
                                                 mainActivity.addImage.drawable,
                                                 mainActivity.addImage.drawable.intrinsicWidth,
                                                 mainActivity.addImage.drawable.intrinsicHeight)
                                         )
-
+                                        //adicionar a vista do produto criado
                                         mainActivity.addProductView(Product(addResponse.trim('"').toInt(), icon, name, 0, priceNum))
 
                                     },
@@ -149,7 +147,7 @@ class ProductsFragment : Fragment() {
                                     override fun getBodyContentType(): String {
                                         return "application/json; charset=utf-8"
                                     }
-
+                                    //carregar as variaveis que pretendemos enviar para o API no body do pedido
                                     override fun getBody(): ByteArray {
                                         val jsonBody = JSONObject()
                                         jsonBody.put("icon", icon)
@@ -161,7 +159,7 @@ class ProductsFragment : Fragment() {
 
                                 }
 
-                                // Access the RequestQueue through your singleton class.
+                                //Adicionar o segundo pedido à fila
                                 Volley.newRequestQueue(context).add(jsonObjectRequest)
 
                             },
@@ -173,7 +171,7 @@ class ProductsFragment : Fragment() {
                             override fun getBodyContentType(): String {
                                 return "application/json; charset=utf-8"
                             }
-
+                            //carregar as variaveis que pretendemos enviar para o API no body do pedido
                             override fun getBody(): ByteArray {
                                 val jsonBody = JSONObject()
                                 jsonBody.put("icon", icon)
@@ -185,11 +183,8 @@ class ProductsFragment : Fragment() {
 
                         }
 
-                        // Access the RequestQueue through your singleton class.
+                        //Adicionar o primeiro pedido à fila
                         Volley.newRequestQueue(context).add(jsonObjectRequest)
-
-                        //refreshProductsList()
-
 
                         mainActivity.hideKeyboard()
 
@@ -228,14 +223,17 @@ class ProductsFragment : Fragment() {
                 }
             }
 
+        /**
+         * Popup para adicionar um produto ao carrinho
+         */
         @SuppressLint("SetTextI18n")
         fun addProductDialog(context: Context, productItem: Product) {
             val dialog = Dialog(context)
-            //We have added a title in the custom layout. So let's disable the default title.
+            //Desativar titulo default
             dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-            //The user will be able to cancel the dialog bu clicking anywhere outside the dialog.
+            //Permitir o fecho do popup
             dialog.setCancelable(true)
-            //Mention the name of the layout of your custom dialog.
+            //Layout a ser utilizado no popup
             dialog.setContentView(R.layout.add_product)
 
             val mainActivity = (context as MainActivity)
@@ -246,7 +244,6 @@ class ProductsFragment : Fragment() {
             dialog.findViewById<TextView?>(R.id.product).setText(productName, TextView.BufferType.EDITABLE)
             dialog.findViewById<TextView?>(R.id.price).setText("Preço: 0,00 €", TextView.BufferType.EDITABLE)
 
-            //Initializing the views of the dialog
             val quantityEt: EditText = dialog.findViewById(R.id.quantity)
             val priceEt: EditText = dialog.findViewById(R.id.priceInput)
 
@@ -256,7 +253,7 @@ class ProductsFragment : Fragment() {
                 quantityEt.doOnTextChanged { text, start, before, count ->
                     if (text != null)
                         if(text.isNotEmpty() && text.toString().toDoubleOrNull() != null) {
-
+                            //normalizar o preço com a quantidade
                             dialog.findViewById<TextView?>(R.id.price).setText("Preço: ${
                                 mainActivity.normalizePrice(price * text.toString().toInt())
                             } €", TextView.BufferType.EDITABLE)
@@ -272,7 +269,7 @@ class ProductsFragment : Fragment() {
                     if (text != null)
                         if(text.isNotEmpty() && text.toString().toDoubleOrNull() != null){
                             if(quantityEt.text.isNotEmpty() && quantityEt.text.toString().toDoubleOrNull() != null) {
-
+                                //normalizar o preço com a quantidade
                                 dialog.findViewById<TextView?>(R.id.price).setText(
                                     "Preço: ${
                                         mainActivity.normalizePrice(text.toString().toDouble() * quantityEt.text.toString().toInt())
@@ -282,6 +279,7 @@ class ProductsFragment : Fragment() {
                                 val num = text.toString().replace(",", ".")
 
                                 if(num.contains(".")){
+                                    //normalizar o preço com a quantidade
                                     dialog.findViewById<TextView?>(R.id.price).setText(
                                         "Preço: ${
                                             mainActivity.normalizePrice(text.toString().toDouble())
@@ -302,13 +300,13 @@ class ProductsFragment : Fragment() {
 
                             if (priceEt.text != null)
                                 if(priceEt.text.isNotEmpty() && priceEt.text.toString().toDoubleOrNull() != null) {
-
+                                    //normalizar o preço com a quantidade
                                     dialog.findViewById<TextView?>(R.id.price).setText("Preço: ${
                                         mainActivity.normalizePrice(priceEt.text.toString().toDouble() * text.toString().toInt())
                                     } €", TextView.BufferType.EDITABLE)
 
                                 }else{
-
+                                    //normalizar o preço com a quantidade
                                     dialog.findViewById<TextView?>(R.id.price).setText("Preço: ${
                                         mainActivity.normalizePrice(price * text.toString().toInt())
                                     } €", TextView.BufferType.EDITABLE)
@@ -317,7 +315,7 @@ class ProductsFragment : Fragment() {
                         }
                 }
             }
-
+            //listener para adicionar o produto ao carrinho
             val submitButton: Button = dialog.findViewById(R.id.submit_button)
             submitButton.setOnClickListener {
                 if (quantityEt.text.toString().isNotEmpty()) {
@@ -333,7 +331,7 @@ class ProductsFragment : Fragment() {
 
                     var quantify = quantityEt.text.toString().toInt()
                     var product = Product(0, image, productName, quantify, price * quantify)
-
+                    //atualizar os produtos no carrinho e respetivo preço total
                     if (mainActivity.myProducts.any { x -> x.getName() == productName }) {
                         val i =
                             mainActivity.myProducts.indexOfFirst { x -> x.getName() == productName }
@@ -349,7 +347,7 @@ class ProductsFragment : Fragment() {
                     }
 
                     mainActivity.totalPrice += price * quantify
-
+                    //refazer o menu de checkout
                     mainActivity.supportFragmentManager.beginTransaction()
                         .replace(R.id.bottom_sheet_fragment_parent, BottomSheetFragment()).commit()
 

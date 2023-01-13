@@ -31,8 +31,9 @@ class AboutUsActivity : AppCompatActivity() {
         viewPager.adapter = vpAdapter
 
         val githubButton : ImageButton = binding.githubButton
-
+        //listener do botão do github
         githubButton.setOnClickListener {
+            //consoante a imagem selecionada no viewpager, retorna o github da pessoa na imagem em questão
             if (viewPager.currentItem == 0) {
                 val url = "https://github.com/JKZ02/"
                 val intent = Intent(Intent.ACTION_VIEW)
@@ -47,6 +48,9 @@ class AboutUsActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Voltar ao login quando pressionado home
+     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {

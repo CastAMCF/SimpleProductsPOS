@@ -17,13 +17,15 @@ var TAB_TITLES = arrayOf(
  */
 class SectionsPagerAdapter(private val context: Context, fm: FragmentManager, private val admin: Boolean)
     : FragmentPagerAdapter(fm) {
-
+    /**
+     * Retorna um fragmento consoante a página selecionada
+     */
     override fun getItem(position: Int): Fragment {
-        // getItem is called to instantiate the fragment for the given page.
-        // Return a PlaceholderFragment (defined as a static inner class below).
 
+        //consoante a página selecionada, retornamos um fragmento especifcio
         when (position) {
             0 -> return ProductsFragment()
+            //caso o utilizador seja gerente retornamos outro fragmento
             1 -> return if (admin) {
                     UsersFragment()
                 }else{
@@ -35,12 +37,17 @@ class SectionsPagerAdapter(private val context: Context, fm: FragmentManager, pr
         }
     }
 
+    /**
+     * Retorna o título da página
+     */
     override fun getPageTitle(position: Int): CharSequence? {
         return context.resources.getString(TAB_TITLES[position])
     }
 
+    /**
+     * Retorna o número de páginas
+     */
     override fun getCount(): Int {
-        // Show 2 total pages.
         return 2
     }
 }
