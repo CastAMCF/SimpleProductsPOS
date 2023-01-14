@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity() {
 
         myProductListAdapter = MyProductListAdapter(this, R.layout.item_product_view, myProducts)
         myUserListAdapter = MyUserListAdapter(this, R.layout.item_user_view, myUsers)
-        //Guardar imagem nas shared preferences
+        //Guardar imagem encriptada na internal storage
         saveImage("placeholder", BitmapFactory.decodeResource(resources, R.drawable.placeholder))
 
         //Alterar o nome dos fragmentos baseado na role do utilizador atual
@@ -189,7 +189,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Guarda uma imagem no shared preferences
+     * Guarda uma imagem encriptada na internal storage
      */
     fun saveImage(icon: String, image: Bitmap){
         val baos = ByteArrayOutputStream()
@@ -205,7 +205,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Popup de edição de um produto
+     * Mostra um popup para editar um dado produto da view e da base de dados
      */
     @SuppressLint("SetTextI18n")
     private fun editProductDataDialog(
@@ -368,7 +368,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Adiciona um produto à vista
+     * Adiciona um produto à vista "Produtos"
      */
     fun addProductView(dataProduct: Product): View {
         val productView: View = layoutInflater.inflate(R.layout.product_card, null)
@@ -386,7 +386,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Remove um produto da vista
+     * Remove um produto da vista "Produtos"
      */
     private fun removeProductView(view: View, product: Product) {
 
@@ -431,7 +431,7 @@ class MainActivity : AppCompatActivity() {
 
             true
         }
-        //manter premido para atualizar produto caso seja gerente
+        //listener para o produto
         but.setOnClickListener{
 
             if (session.getRole().contains("manager")) {
@@ -575,6 +575,9 @@ class MainActivity : AppCompatActivity() {
         Volley.newRequestQueue(this).add(jsonArrayRequest)
     }
 
+	/**
+	 * Código adaptado de: https://www.youtube.com/watch?v=WRANgDgM2Zg&ab_channel=BrianFraser
+	 */
     class MyProductListAdapter(context: Context, @LayoutRes private val layoutResource: Int, private val myProducts: List<Product>):
         ArrayAdapter<Product>(context, layoutResource, myProducts) {
 
@@ -609,6 +612,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+	/**
+	 * Código adaptado de: https://www.youtube.com/watch?v=WRANgDgM2Zg&ab_channel=BrianFraser
+	 */
     class MyUserListAdapter(context: Context, @LayoutRes private val layoutResource: Int, private val myUsers: List<User>):
         ArrayAdapter<User>(context, layoutResource, myUsers) {
 

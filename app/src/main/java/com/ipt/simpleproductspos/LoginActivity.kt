@@ -45,6 +45,7 @@ class LoginActivity : AppCompatActivity() {
                                 val session = User(res[0].toInt(), usernameTxt, passwordTxt, res[1])
                                 val intent = Intent(this, MainActivity::class.java)
                                 //incluir a sessão no intent
+								//código adaptado de: https://stackoverflow.com/questions/47593205/how-to-pass-custom-object-via-intent-in-kotlin
                                 intent.putExtra("sessao", session)
                                 finish()
                                 startActivity(intent)

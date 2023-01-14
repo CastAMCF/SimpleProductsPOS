@@ -10,6 +10,9 @@ import androidx.viewpager.widget.PagerAdapter
 import com.ipt.simpleproductspos.R
 import java.util.*
 
+/**
+ * Código adaptado de: https://www.youtube.com/watch?v=mvlCKRpKVZs&ab_channel=AppClasses
+ */
 class ViewPagerAdapter(val context: Context, private val imageList: List<Int>) : PagerAdapter() {
     /**
      * retorna a quantidade de imagens na lista

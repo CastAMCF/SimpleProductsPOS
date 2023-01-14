@@ -96,7 +96,7 @@ class SaleFragment : Fragment() {
 
             true
         }
-        //refazer o menu de pagamento
+        //refazer o checkout
         mainActivity.supportFragmentManager.beginTransaction().replace(R.id.bottom_sheet_fragment_parent, BottomSheetFragment()).commit()
 
         return view
@@ -123,7 +123,7 @@ class SaleFragment : Fragment() {
     }
 
     /**
-     * Popup para adicionar um pedido ao carrinho de compras
+     * Popup para editar um produto no carrinho de compras
      */
     @SuppressLint("SetTextI18n")
     private fun editProductDialog(context: Context, productItem: Product, adapter: MainActivity.MyProductListAdapter) {
