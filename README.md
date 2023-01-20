@@ -15,7 +15,4 @@ You may also see any lint errors in the console.
 
 Install all the modules needed to run the app.
 
-</br>Nota Final: ??
-</br>
-</br>
-</br>INSTITUTO POLITÉCNICO DE TOMAR (c)2022
+</br>INSTITUTO POLITÉCNICO DE TOMAR (c)2023
