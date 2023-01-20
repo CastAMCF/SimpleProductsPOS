@@ -22,7 +22,7 @@ Por enquanto ainda não se encontraram bugs</br>
 - [x] Login
 - [x] Ler imagens externas
 
-</br>Nota Final: ??
+</br>Nota Final: 15
 </br>
 </br>
 </br>INSTITUTO POLITÉCNICO DE TOMAR (c)2023
