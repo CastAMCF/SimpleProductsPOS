@@ -1,4 +1,4 @@
-package com.ipt.simpleproductspos.ui.main
+package com.ipt.simpleproductspos.ui.fragment
 
 import android.annotation.SuppressLint
 import android.os.Bundle
@@ -11,8 +11,9 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.core.widget.doOnTextChanged
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.ipt.simpleproductspos.MainActivity
+import com.ipt.simpleproductspos.ui.activity.MainActivity
 import com.ipt.simpleproductspos.R
+import com.ipt.simpleproductspos.data.Session
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -49,7 +50,7 @@ class BottomSheetFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         thisView = view
 
-        val totaPrice = mainActivity.totalPrice
+        val totaPrice = Session().getTotalPrice()
 
         val totalTxt: TextView = view.findViewById(R.id.totalPrice)
         totalTxt.text = "${
@@ -70,7 +71,7 @@ class BottomSheetFragment : Fragment() {
             this.state = BottomSheetBehavior.STATE_COLLAPSED
         }
 
-        val totaPrice = mainActivity.totalPrice
+        val totaPrice = Session().getTotalPrice()
 
         val receivePrice: EditText = view.findViewById(R.id.receivePrice)
         receivePrice.doOnTextChanged { text, start, before, count ->
@@ -94,10 +95,10 @@ class BottomSheetFragment : Fragment() {
         val but: Button = view.findViewById(R.id.btn_pay)
         but.setOnClickListener {
 
-            if(mainActivity.totalPrice > 0.00) {
+            if(Session().getTotalPrice() > 0.00) {
 
                 mainActivity.myProducts.clear()
-                mainActivity.totalPrice = 0.00
+                Session().setTotalPrice(0.00)
 
                 mainActivity.myProductListAdapter.notifyDataSetChanged()
 

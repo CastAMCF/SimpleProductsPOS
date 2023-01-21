@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    tools:context=".ui.main.BottomSheetFragment"
+    tools:context=".ui.fragment.BottomSheetFragment"
     android:layout_marginBottom="10dp"
     android:layout_marginEnd="10dp"
     android:layout_marginStart="10dp"
@@ -73,15 +73,18 @@
             <EditText
                 android:id="@+id/receivePrice"
                 style="@style/TextAppearance.AppCompat.Title"
-                android:inputType="numberDecimal"
-                android:layout_width="wrap_content"
+                android:layout_width="75dp"
                 android:layout_height="wrap_content"
+                android:layout_alignStart="@+id/totalPrice"
                 android:layout_alignBottom="@+id/receiveTxt"
                 android:layout_alignParentEnd="true"
-                android:layout_alignStart="@+id/totalPrice"
+                android:layout_marginStart="-4dp"
                 android:layout_marginEnd="15dp"
-                android:textStyle="bold"
-                android:autofillHints="" />
+                android:layout_marginBottom="0dp"
+                android:autofillHints=""
+                android:inputType="numberDecimal"
+                android:maxLength="6"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/changeTxt"

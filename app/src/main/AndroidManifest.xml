@@ -17,7 +17,7 @@
         android:theme="@style/Theme.SimpleProductsPOS"
         tools:targetApi="31">
         <activity
-            android:name=".AboutUsActivity"
+            android:name=".ui.activity.AboutUsActivity"
             android:exported="true"
             android:theme="@style/Theme.SimpleProductsPOS.NoActionBar">
             <meta-data
@@ -25,7 +25,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".LoginActivity"
+            android:name=".ui.activity.LoginActivity"
             android:exported="true"
             android:theme="@style/Theme.SimpleProductsPOS.NoActionBar">
             <intent-filter>
@@ -39,7 +39,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.activity.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.SimpleProductsPOS.NoActionBar">
             <meta-data

@@ -1,10 +1,13 @@
-package com.ipt.simpleproductspos.ui.main
+package com.ipt.simpleproductspos.ui.adapter
 
 import android.content.Context
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import com.ipt.simpleproductspos.R
+import com.ipt.simpleproductspos.ui.fragment.ProductsFragment
+import com.ipt.simpleproductspos.ui.fragment.SaleFragment
+import com.ipt.simpleproductspos.ui.fragment.UsersFragment
 
 var TAB_TITLES = arrayOf(
     R.string.tab_text_1,

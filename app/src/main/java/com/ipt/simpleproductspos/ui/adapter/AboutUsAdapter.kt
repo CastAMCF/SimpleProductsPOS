@@ -1,4 +1,4 @@
-package com.ipt.simpleproductspos.ui.main
+package com.ipt.simpleproductspos.ui.fragment
 
 import android.content.Context
 import android.view.LayoutInflater

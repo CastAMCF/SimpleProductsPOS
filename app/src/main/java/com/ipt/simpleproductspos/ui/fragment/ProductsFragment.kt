@@ -1,4 +1,4 @@
-package com.ipt.simpleproductspos.ui.main
+package com.ipt.simpleproductspos.ui.fragment
 
 import android.annotation.SuppressLint
 import android.app.Dialog
@@ -14,13 +14,15 @@ import android.widget.*
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
+import com.android.volley.Response
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.ipt.simpleproductspos.User
-import com.ipt.simpleproductspos.MainActivity
-import com.ipt.simpleproductspos.Product
-import com.ipt.simpleproductspos.R
+import com.google.android.material.textfield.TextInputLayout
+import com.ipt.simpleproductspos.*
+import com.ipt.simpleproductspos.data.Product
+import com.ipt.simpleproductspos.data.Session
+import com.ipt.simpleproductspos.data.User
+import com.ipt.simpleproductspos.ui.activity.MainActivity
+import com.ipt.simpleproductspos.volley.VolleyRequest
 import org.json.JSONObject
 
 
@@ -39,7 +41,6 @@ class ProductsFragment : Fragment() {
     private var param1: String? = null
     private var param2: String? = null
     private lateinit var mainActivity: MainActivity
-    private lateinit var apiProductsUrl: String
     private lateinit var session: User
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,7 +50,6 @@ class ProductsFragment : Fragment() {
             param2 = it.getString(ARG_PARAM2)
         }
         mainActivity = (activity as MainActivity)
-        apiProductsUrl = mainActivity.apiProductsUrl
         session = mainActivity.session
     }
 
@@ -65,7 +65,7 @@ class ProductsFragment : Fragment() {
         //Botão para adicionar um novo produto
         val addProduct: FloatingActionButton = view.findViewById(R.id.add_product_card)
         //Caso o user seja gerente, adicionamos um listener para adicionar um produto, caso contrário escondemos o botão
-        if (session.getRole().contains("manager")) {
+        if (session.role.contains("manager")) {
             addProduct.setOnClickListener { view ->
                 addProductDataDialog(requireContext())
             }
@@ -89,15 +89,25 @@ class ProductsFragment : Fragment() {
         //Permitir o fecho do popup
         dialog.setCancelable(true)
         //Layout a ser utilizado no popup
-        dialog.setContentView(R.layout.edit_product)
+        dialog.setContentView(R.layout.update_product)
 
         dialog.findViewById<TextView?>(R.id.product).setText("Adicionar Produto", TextView.BufferType.EDITABLE)
 
         val nameEt: EditText = dialog.findViewById(R.id.nameInput)
+        val nameLayout: TextInputLayout = dialog.findViewById(R.id.nameInputLayout)
         val priceEt: EditText = dialog.findViewById(R.id.priceInput)
+        val priceLayout: TextInputLayout = dialog.findViewById(R.id.priceInputLayout)
         mainActivity.addImage = dialog.findViewById(R.id.image)
 
         mainActivity.addImage.setOnClickListener{ mainActivity.chooseImgTypeDialog(context) }
+
+        nameEt.doOnTextChanged { text, start, before, count ->
+            nameLayout.error = null
+        }
+
+        priceEt.doOnTextChanged { text, start, before, count ->
+            priceLayout.error = null
+        }
 
         val submitButton: Button = dialog.findViewById(R.id.submit_button)
         submitButton.text = "Adicionar"
@@ -119,83 +129,61 @@ class ProductsFragment : Fragment() {
 
                         val priceNum = price.toString().replace(",", ".").toDouble()
                         //preparar pedido para o API
-                        val jsonObjectRequest = object : StringRequest(
-                            Method.POST, apiProductsUrl,
-                            { addResponse ->
+                        var productId = 0
 
-                                val url = "${apiProductsUrl}/${addResponse.trim('"').toInt()}"
-                                icon += addResponse.trim('"').toInt()
-                                //preparar segundo pedido para o api com a resposta do primeiro pedido
-                                val jsonObjectRequest = object : StringRequest(
-                                    Method.PUT, url,
-                                    { response ->
-
-                                        Toast.makeText(context, "Produto Adicionado", Toast.LENGTH_SHORT).show()
-                                        //converter o icon devolvido pelo primeiro pedido em um bitmap
-                                        mainActivity.saveImage(icon,
-                                            mainActivity.convertToBitmap(
-                                                mainActivity.addImage.drawable,
-                                                mainActivity.addImage.drawable.intrinsicWidth,
-                                                mainActivity.addImage.drawable.intrinsicHeight)
-                                        )
-                                        //adicionar a vista do produto criado
-                                        mainActivity.addProductView(Product(addResponse.trim('"').toInt(), icon, name, 0, priceNum))
-
-                                    },
-                                    { }
-                                ) {
-                                    override fun getBodyContentType(): String {
-                                        return "application/json; charset=utf-8"
-                                    }
-                                    //carregar as variaveis que pretendemos enviar para o API no body do pedido
-                                    override fun getBody(): ByteArray {
-                                        val jsonBody = JSONObject()
-                                        jsonBody.put("icon", icon)
-                                        jsonBody.put("name", name)
-                                        jsonBody.put("quantity", 0)
-                                        jsonBody.put("price", priceNum)
-                                        return jsonBody.toString().toByteArray()
-                                    }
-
-                                }
-
-                                //Adicionar o segundo pedido à fila
-                                Volley.newRequestQueue(context).add(jsonObjectRequest)
-
-                            },
-                            { error ->
-                                Log.e("res", error.toString())
-                                Toast.makeText(context, "Conecte-se à internet para adicionar o produto", Toast.LENGTH_SHORT).show()
-                            }
-                        ) {
-                            override fun getBodyContentType(): String {
-                                return "application/json; charset=utf-8"
-                            }
-                            //carregar as variaveis que pretendemos enviar para o API no body do pedido
-                            override fun getBody(): ByteArray {
-                                val jsonBody = JSONObject()
-                                jsonBody.put("icon", icon)
-                                jsonBody.put("name", name)
-                                jsonBody.put("quantity", 0)
-                                jsonBody.put("price", priceNum)
-                                return jsonBody.toString().toByteArray()
-                            }
-
+                        val iconResponse = Response.Listener<String> { response ->
+                            Toast.makeText(context, "Produto Adicionado", Toast.LENGTH_SHORT).show()
+                            //converter o icon devolvido pelo primeiro pedido em um bitmap
+                            mainActivity.saveImage(icon,
+                                mainActivity.convertToBitmap(
+                                    mainActivity.addImage.drawable,
+                                    mainActivity.addImage.drawable.intrinsicWidth,
+                                    mainActivity.addImage.drawable.intrinsicHeight)
+                            )
+                            //adicionar a vista do produto criado
+                            mainActivity.addProductView(Product(productId, icon, name, 0, priceNum))
                         }
 
-                        //Adicionar o primeiro pedido à fila
-                        Volley.newRequestQueue(context).add(jsonObjectRequest)
+                        val iconResponseError = Response.ErrorListener {}
+
+                        val addResponse = Response.Listener<String> { response ->
+
+                            productId = response.trim('"').toInt()
+                            icon += productId
+
+                            val jsonBody = JSONObject()
+                            jsonBody.put("icon", icon)
+                            jsonBody.put("name", name)
+                            jsonBody.put("quantity", 0)
+                            jsonBody.put("price", priceNum)
+
+                            VolleyRequest().Product().update(context, productId, iconResponse, iconResponseError, jsonBody)
+                        }
+
+                        val addResponseError = Response.ErrorListener { error ->
+                            Log.e("res", error.toString())
+                            Toast.makeText(context, "Conecte-se à internet para adicionar o produto", Toast.LENGTH_SHORT).show()
+                        }
+
+                        val jsonBody = JSONObject()
+                        jsonBody.put("icon", icon)
+                        jsonBody.put("name", name)
+                        jsonBody.put("quantity", 0)
+                        jsonBody.put("price", priceNum)
+
+                        VolleyRequest().Product().create(context, addResponse, addResponseError, jsonBody)
+
 
                         mainActivity.hideKeyboard()
 
                         dialog.dismiss()
 
                     }else{
-                        priceEt.error = "O Preço é obrigatório"
+                        priceLayout.error = "O Preço é obrigatório"
                     }
 
             }else{
-                nameEt.error = "O Nome é obrigatório"
+                nameLayout.error = "O Nome é obrigatório"
             }
 
         }
@@ -227,30 +215,32 @@ class ProductsFragment : Fragment() {
          * Popup para adicionar um produto ao carrinho
          */
         @SuppressLint("SetTextI18n")
-        fun addProductDialog(context: Context, productItem: Product) {
+        fun addProductCheckoutDialog(context: Context, productItem: Product) {
             val dialog = Dialog(context)
             //Desativar titulo default
             dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
             //Permitir o fecho do popup
             dialog.setCancelable(true)
             //Layout a ser utilizado no popup
-            dialog.setContentView(R.layout.add_product)
+            dialog.setContentView(R.layout.add_product_checkout)
 
             val mainActivity = (context as MainActivity)
-            val productName = productItem.getName()
-            var price = productItem.getPrice()
-            val image = productItem.getIcon()
 
-            dialog.findViewById<TextView?>(R.id.product).setText(productName, TextView.BufferType.EDITABLE)
+            var (id, icon, name, quantity, price) = productItem
+
+            dialog.findViewById<TextView?>(R.id.product).setText(name, TextView.BufferType.EDITABLE)
             dialog.findViewById<TextView?>(R.id.price).setText("Preço: 0,00 €", TextView.BufferType.EDITABLE)
 
             val quantityEt: EditText = dialog.findViewById(R.id.quantity)
+            val quantityInputLayout: TextInputLayout = dialog.findViewById(R.id.quantityLayout)
             val priceEt: EditText = dialog.findViewById(R.id.priceInput)
+            val priceInputLayout: TextInputLayout = dialog.findViewById(R.id.priceInputLayout)
 
             if(price > 0){
                 dialog.findViewById<TextView?>(R.id.price).setText("Preço: ${mainActivity.normalizePrice(price)} €", TextView.BufferType.EDITABLE)
 
                 quantityEt.doOnTextChanged { text, start, before, count ->
+                    quantityInputLayout.error = null
                     if (text != null)
                         if(text.isNotEmpty() && text.toString().toDoubleOrNull() != null) {
                             //normalizar o preço com a quantidade
@@ -261,11 +251,13 @@ class ProductsFragment : Fragment() {
                         }
                 }
 
+                priceInputLayout.isVisible = false
                 priceEt.isVisible = false
 
             }else{
 
                 priceEt.doOnTextChanged { text, start, before, count ->
+                    priceInputLayout.error = null
                     if (text != null)
                         if(text.isNotEmpty() && text.toString().toDoubleOrNull() != null){
                             if(quantityEt.text.isNotEmpty() && quantityEt.text.toString().toDoubleOrNull() != null) {
@@ -295,6 +287,7 @@ class ProductsFragment : Fragment() {
                 }
 
                 quantityEt.doOnTextChanged { text, start, before, count ->
+                    quantityInputLayout.error = null
                     if (text != null)
                         if(text.isNotEmpty() && text.toString().toDoubleOrNull() != null) {
 
@@ -322,7 +315,7 @@ class ProductsFragment : Fragment() {
 
                     if (priceEt.isVisible) {
                         if (priceEt.text.toString().isEmpty()) {
-                            priceEt.error = "Preço é obrigatório"
+                            priceInputLayout.error = "Preço é obrigatório"
                             return@setOnClickListener
                         } else {
                             price = priceEt.text.toString().replace(",", ".").toDouble()
@@ -330,23 +323,23 @@ class ProductsFragment : Fragment() {
                     }
 
                     var quantify = quantityEt.text.toString().toInt()
-                    var product = Product(0, image, productName, quantify, price * quantify)
+                    var product = Product(0, icon, name, quantify, price * quantify)
                     //atualizar os produtos no carrinho e respetivo preço total
-                    if (mainActivity.myProducts.any { x -> x.getName() == productName }) {
+                    if (mainActivity.myProducts.any { x -> x.name == name }) {
                         val i =
-                            mainActivity.myProducts.indexOfFirst { x -> x.getName() == productName }
+                            mainActivity.myProducts.indexOfFirst { x -> x.name == name }
 
-                        quantify += mainActivity.myProducts[i].getQuantity()
-                        product = Product(0, image, productName, quantify, price * quantify)
+                        quantify += mainActivity.myProducts[i].quantity
+                        product = Product(0, icon, name, quantify, price * quantify)
 
-                        mainActivity.totalPrice -= mainActivity.myProducts[i].getPrice()
+                        Session().subTotalPrice(mainActivity.myProducts[i].price)
 
                         mainActivity.myProducts[i] = product
                     } else {
                         mainActivity.myProducts.add(product)
                     }
 
-                    mainActivity.totalPrice += price * quantify
+                    Session().addTotalPrice(price * quantify)
                     //refazer o menu de checkout
                     mainActivity.supportFragmentManager.beginTransaction()
                         .replace(R.id.bottom_sheet_fragment_parent, BottomSheetFragment()).commit()
@@ -355,7 +348,7 @@ class ProductsFragment : Fragment() {
 
                     dialog.dismiss()
                 } else {
-                    priceEt.error = "Preço é obrigatório"
+                    quantityInputLayout.error = "Quantidade é obrigatória"
                 }
             }
 

@@ -1,4 +1,4 @@
-package com.ipt.simpleproductspos.ui.main
+package com.ipt.simpleproductspos.ui.fragment
 
 import android.annotation.SuppressLint
 import android.app.Dialog
@@ -10,17 +10,20 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.*
+import android.widget.AdapterView.OnItemClickListener
 import androidx.appcompat.app.AlertDialog
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.android.volley.Request
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
+import com.android.volley.Response
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.ipt.simpleproductspos.MainActivity
+import com.google.android.material.textfield.TextInputLayout
+import com.ipt.simpleproductspos.ui.activity.MainActivity
 import com.ipt.simpleproductspos.R
-import com.ipt.simpleproductspos.User
+import com.ipt.simpleproductspos.data.User
+import com.ipt.simpleproductspos.volley.VolleyRequest
 import org.json.JSONObject
+
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -37,7 +40,6 @@ class UsersFragment : Fragment() {
     private var param1: String? = null
     private var param2: String? = null
     private lateinit var mainActivity: MainActivity
-    private lateinit var apiUsersUrl: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,7 +49,6 @@ class UsersFragment : Fragment() {
         }
 
         mainActivity = (activity as MainActivity)
-        apiUsersUrl = mainActivity.apiUsersUrl
 
         mainActivity.refreshUsersList()
     }
@@ -95,6 +96,8 @@ class UsersFragment : Fragment() {
             addUserDialog(requireContext(), myListAdapter)
         }
 
+        myListAdapter.notifyDataSetChanged()
+
         return view
     }
 
@@ -129,50 +132,62 @@ class UsersFragment : Fragment() {
         //Permitir o fecho do popup
         dialog.setCancelable(true)
         //Layout a ser utilizado no popup
-        dialog.setContentView(R.layout.add_user)
+        dialog.setContentView(R.layout.update_user)
 
         dialog.findViewById<TextView?>(R.id.user).setText("Criar Utilizador", TextView.BufferType.EDITABLE)
 
 
-        val roles: ArrayList<String> = arrayListOf()
-        roles.add("Empregado")
-        roles.add("Gerente")
+        val roles: ArrayList<String> = arrayListOf("Empregado", "Gerente")
 
-        val adapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, roles)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        val adapter = ArrayAdapter(context, R.layout.spinner_item, roles)
 
-        val spinner: Spinner = dialog.findViewById(R.id.addUserRole)
-        spinner.adapter = adapter
+        val roleLayout: TextInputLayout = dialog.findViewById(R.id.userRoleLayout)
+        val autoCompleteTxt: AutoCompleteTextView = dialog.findViewById(R.id.userRole)
+        autoCompleteTxt.setAdapter(adapter)
 
-        val usernameEt: EditText = dialog.findViewById(R.id.addUserName)
-        val passEt: EditText = dialog.findViewById(R.id.addUserPass)
-        val passConfirmEt: EditText = dialog.findViewById(R.id.editUserConfirmPass)
+        var role = ""
+        autoCompleteTxt.onItemClickListener = OnItemClickListener { parent, view, position, id ->
+            roleLayout.error = null
+            val selectedItem = parent.getItemAtPosition(position).toString()
+            //alterar o texto da role para o correto
+            role = if (selectedItem.contains("Gerente")) {
+                "manager"
+            }else{
+                "employee"
+            }
+        }
+
+        val usernameEt: EditText = dialog.findViewById(R.id.userName)
+        val usernameLayout: TextInputLayout = dialog.findViewById(R.id.userNameLayout)
+        val passEt: EditText = dialog.findViewById(R.id.userPass)
+        val passLayout: TextInputLayout = dialog.findViewById(R.id.userPassLayout)
+        val passConfirmEt: EditText = dialog.findViewById(R.id.userConfirmPass)
+
+        usernameEt.doOnTextChanged { text, start, before, count ->
+            usernameLayout.error = null
+        }
+
+        passEt.doOnTextChanged { text, start, before, count ->
+            passLayout.error = null
+        }
+
         //listener para adicionar novo user
         val submitButton: Button = dialog.findViewById(R.id.submit_button)
         submitButton.setOnClickListener {
             val usernameText = usernameEt.text.toString()
             val pass = passEt.text.toString()
             val passConfirm = passConfirmEt.text.toString()
-            var role = spinner.selectedItem.toString()
-            //alterar o texto da role para o correto
-            role = if (role.contains("Gerente")) {
-                "manager"
-            }else{
-                "employee"
-            }
 
             val myUsers = mainActivity.myUsers
 
             if (usernameText.isNotEmpty()) {
 
                 if (pass.isNotEmpty()) {
-
                     if (pass == passConfirm) {
-                        //preparar chamada ao API
-                        val jsonObjectRequest = object : StringRequest(
-                            Method.POST, apiUsersUrl,
-                            { response ->
 
+                        if (role.isNotEmpty()) {
+                            //preparar chamada ao API
+                            val response = Response.Listener<String> { response ->
                                 //Log.e("res", response.toString())
                                 //caso a resposta do api contenha "existe um utilizador" então já existe um utilizador com o nome desejado
                                 if (response.trim('"').contains("existe um utilizador")){
@@ -187,41 +202,34 @@ class UsersFragment : Fragment() {
 
                                     dialog.dismiss()
                                 }
+                            }
 
-                            },
-                            { error ->
+                            val responseError = Response.ErrorListener { error ->
                                 Log.e("res", error.toString())
                                 Toast.makeText(context, "Conecte-se à internet para criar o utilizador", Toast.LENGTH_SHORT).show()
                                 dialog.dismiss()
                             }
-                        ) {
-                            override fun getBodyContentType(): String {
-                                return "application/json; charset=utf-8"
-                            }
-                            //carregar as variáveis que pretendemos enviar para o API no body do pedido
-                            override fun getBody(): ByteArray {
-                                val jsonBody = JSONObject()
-                                jsonBody.put("username", usernameText)
-                                jsonBody.put("password", pass)
-                                jsonBody.put("role", role)
-                                return jsonBody.toString().toByteArray()
-                            }
 
+                            val jsonBody = JSONObject()
+                            jsonBody.put("username", usernameText)
+                            jsonBody.put("password", pass)
+                            jsonBody.put("role", role)
+
+                            VolleyRequest().User().create(context, response, responseError, jsonBody)
+
+                        }else{
+                            roleLayout.error = "Nenhum cargo selecionado"
                         }
-
-                        //Adicionar o pedido á fila
-                        Volley.newRequestQueue(context).add(jsonObjectRequest)
 
                     }else{
                         Toast.makeText(context, "As palavras-passe não são iguais", Toast.LENGTH_SHORT).show()
                     }
-
                 }else{
-                    passEt.error = "A Palavra-Passe é obrigatória"
+                    passLayout.error = "A Palavra-Passe é obrigatória"
                 }
 
             }else{
-                usernameEt.error = "O Nome de Utilizador é obrigatório"
+                usernameLayout.error = "O Nome de Utilizador é\nobrigatório"
             }
 
             mainActivity.hideKeyboard()
@@ -241,64 +249,77 @@ class UsersFragment : Fragment() {
         //Permitir o fecho do popup
         dialog.setCancelable(true)
         //Layout a utilizar no popup
-        dialog.setContentView(R.layout.edit_user)
+        dialog.setContentView(R.layout.update_user)
 
         dialog.findViewById<TextView?>(R.id.user).setText("Editar Utilizador", TextView.BufferType.EDITABLE)
 
-        val userName = user.getUsername()
-        dialog.findViewById<TextView?>(R.id.editUserName).setText(userName, TextView.BufferType.EDITABLE)
+        val (id, username, password, role) = user
+        dialog.findViewById<TextView?>(R.id.userName).setText(username, TextView.BufferType.EDITABLE)
 
-        val roles: ArrayList<String> = arrayListOf()
-        if (user.getRole().contains("manager")) {
-            roles.add("Gerente")
-            roles.add("Empregado")
-        }else{
-            roles.add("Empregado")
-            roles.add("Gerente")
-        }
 
-        val adapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, roles)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        val roles: ArrayList<String> = arrayListOf("Empregado", "Gerente")
 
-        val spinner: Spinner = dialog.findViewById(R.id.editUserRole)
-        spinner.adapter = adapter
+        val adapter = ArrayAdapter(context, R.layout.spinner_item, roles)
 
-        val usernameEt: EditText = dialog.findViewById(R.id.editUserName)
-        val passEt: EditText = dialog.findViewById(R.id.editUserPass)
-        val passConfirmEt: EditText = dialog.findViewById(R.id.editUserConfirmPass)
-        //listener para edição do user
-        val submitButton: Button = dialog.findViewById(R.id.submit_button)
-        submitButton.setOnClickListener {
-            val usernameText = usernameEt.text.toString()
-            var pass = passEt.text.toString()
-            var passConfirm = passConfirmEt.text.toString()
-            var role = spinner.selectedItem.toString()
-            //alterar para o correto
-            role = if (role.contains("Gerente")) {
+        val roleLayout: TextInputLayout = dialog.findViewById(R.id.userRoleLayout)
+        val autoCompleteTxt: AutoCompleteTextView = dialog.findViewById(R.id.userRole)
+        autoCompleteTxt.setAdapter(adapter)
+
+        var newRole = ""
+        autoCompleteTxt.onItemClickListener = OnItemClickListener { parent, view, position, id ->
+            roleLayout.error = null
+            val selectedItem = parent.getItemAtPosition(position).toString()
+            //alterar o texto da role para o correto
+            newRole = if (selectedItem.contains("Gerente")) {
                 "manager"
             }else{
                 "employee"
             }
+        }
+
+        val usernameEt: EditText = dialog.findViewById(R.id.userName)
+        val usernameLayout: TextInputLayout = dialog.findViewById(R.id.userNameLayout)
+        val passEt: EditText = dialog.findViewById(R.id.userPass)
+        val passLayout: TextInputLayout = dialog.findViewById(R.id.userPassLayout)
+        val passConfirmEt: EditText = dialog.findViewById(R.id.userConfirmPass)
+
+        usernameEt.doOnTextChanged { text, start, before, count ->
+            usernameLayout.error = null
+        }
+
+        passEt.doOnTextChanged { text, start, before, count ->
+            passLayout.error = null
+        }
+
+        /**/
+
+        //listener para edição do user
+        val submitButton: Button = dialog.findViewById(R.id.submit_button)
+        submitButton.text = getString(R.string.save)
+        submitButton.setOnClickListener {
+            val usernameText = usernameEt.text.toString()
+            var pass = passEt.text.toString()
+            var passConfirm = passConfirmEt.text.toString()
 
             if (pass.isEmpty() && passConfirm.isEmpty()) {
-                pass = user.getPassword()
-                passConfirm = user.getPassword()
+                pass = password
+                passConfirm = password
             }
+
+            if (newRole.isEmpty())
+                newRole = role
 
             val myUsers = mainActivity.myUsers
 
             if (usernameText.isNotEmpty()) {
 
                 if (pass.isNotEmpty()) {
-
                     if (pass == passConfirm) {
 
-                        val url = "${apiUsersUrl}/${user.getUsername()}"
-                        //preparar pedido para a API
-                        val jsonObjectRequest = object : StringRequest(
-                            Method.PUT, url,
-                            { response ->
+                        if (newRole.isNotEmpty()) {
 
+                            //preparar pedido para a API
+                            val response = Response.Listener<String> { response ->
                                 //Log.e("res", response.toString())
                                 Toast.makeText(context, response.trim('"'), Toast.LENGTH_SHORT).show()
                                 //caso a resposta do API contenha "foi eliminado" removemos o user e atualizamos a lista
@@ -306,48 +327,41 @@ class UsersFragment : Fragment() {
                                     myUsers.remove(user)
                                 }
 
-                                myUsers[myUsers.indexOf(user)] = User(user.getID(), usernameText, pass, role)
+                                myUsers[myUsers.indexOf(user)] = User(id, usernameText, pass, newRole)
 
                                 listAdapter.notifyDataSetChanged()
+                            }
 
-                            },
-                            { error ->
+                            val responseError = Response.ErrorListener { error ->
                                 Log.e("res", error.toString())
                                 Toast.makeText(context, "Conecte-se à internet para editar o utilizador", Toast.LENGTH_SHORT).show()
 
                                 mainActivity.refreshUsersList()
                                 listAdapter.notifyDataSetChanged()
                             }
-                        ) {
-                            override fun getBodyContentType(): String {
-                                return "application/json; charset=utf-8"
-                            }
-                            //carregar as variaveis que pretendemos enviar para o API no body do pedido
-                            override fun getBody(): ByteArray {
-                                val jsonBody = JSONObject()
-                                jsonBody.put("username", usernameText)
-                                jsonBody.put("password", pass)
-                                jsonBody.put("role", role)
-                                return jsonBody.toString().toByteArray()
-                            }
 
+                            val jsonBody = JSONObject()
+                            jsonBody.put("username", usernameText)
+                            jsonBody.put("password", pass)
+                            jsonBody.put("role", newRole)
+
+                            VolleyRequest().User().update(context, username, response, responseError, jsonBody)
+
+                            dialog.dismiss()
+
+                        }else{
+                            roleLayout.error = "Nenhum cargo selecionado"
                         }
-
-                        //Adicionar o pedido à fila
-                        Volley.newRequestQueue(context).add(jsonObjectRequest)
-
-                        dialog.dismiss()
 
                     }else{
                         Toast.makeText(context, "As palavras-passe não são iguais", Toast.LENGTH_SHORT).show()
                     }
-
                 }else{
-                    passEt.error = "A Palavra-Passe é obrigatória"
+                    passLayout.error = "A Palavra-Passe é obrigatória"
                 }
 
             }else{
-                usernameEt.error = "O Nome de Utilizador é obrigatório"
+                usernameLayout.error = "O Nome de Utilizador é\nobrigatório"
             }
 
             mainActivity.hideKeyboard()
@@ -367,29 +381,22 @@ class UsersFragment : Fragment() {
 
         builder.setPositiveButton("Sim") { dialog, which ->
 
-            val url = "${apiUsersUrl}/${user.getUsername()}"
             //preparar pedido para o API
-            val jsonArrayRequest = StringRequest(
-                Request.Method.DELETE, url,
-                { response ->
-                    //removemos o user e atualizamos a lista
-                    myUsers.remove(user)
-                    listAdapter.notifyDataSetChanged()
+            val response = Response.Listener<String> { response ->
+                //removemos o user e atualizamos a lista
+                myUsers.remove(user)
+                listAdapter.notifyDataSetChanged()
 
-                    Toast.makeText(context, response.trim('"'), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, response.trim('"'), Toast.LENGTH_SHORT).show()
+            }
 
-                },
-                { error ->
+            val responseError = Response.ErrorListener { error ->
+                Toast.makeText(context, "Conecte-se à internet para eliminar o utilizador", Toast.LENGTH_SHORT).show()
+                mainActivity.refreshUsersList()
+                listAdapter.notifyDataSetChanged()
+            }
 
-                    Toast.makeText(context, "Conecte-se à internet para eliminar o utilizador", Toast.LENGTH_SHORT).show()
-                    mainActivity.refreshUsersList()
-                    listAdapter.notifyDataSetChanged()
-
-                }
-            )
-
-            //Adicionamos o pedido à fila
-            Volley.newRequestQueue(context).add(jsonArrayRequest)
+            VolleyRequest().User().delete(context, user.username, response, responseError)
         }
 
         builder.setNegativeButton("Não", null)

@@ -12,6 +12,7 @@
     <string name="save">Guardar</string>
     <string name="create">Criar</string>
     <string name="role">Cargo</string>
+    <string name="select_role">Selecionar Cargo</string>
 
     <string name="user">Utilizador</string>
     <string name="users">Utilizadores</string>

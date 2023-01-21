@@ -1,13 +1,16 @@
-package com.ipt.simpleproductspos
+package com.ipt.simpleproductspos.ui.activity
 
+import android.R.attr.left
+import android.R.attr.right
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.MenuItem
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
+import com.ipt.simpleproductspos.R
 import com.ipt.simpleproductspos.databinding.ActivityAboutUsBinding
-import com.ipt.simpleproductspos.ui.main.ViewPagerAdapter
+import com.ipt.simpleproductspos.ui.fragment.ViewPagerAdapter
 
 
 class AboutUsActivity : AppCompatActivity() {
@@ -45,6 +48,22 @@ class AboutUsActivity : AppCompatActivity() {
                 intent.data = Uri.parse(url)
                 startActivity(intent)
             }
+        }
+
+        val rightButton : ImageButton = binding.rightButton
+        rightButton.setOnClickListener {
+
+            if (viewPager.currentItem < viewPager.right)
+                viewPager.setCurrentItem(viewPager.currentItem + 1, true)
+
+        }
+
+        val leftButton : ImageButton = binding.leftButton
+        leftButton.setOnClickListener {
+
+            if (viewPager.currentItem < viewPager.left)
+                viewPager.setCurrentItem(viewPager.currentItem - 1, true)
+
         }
     }
 
