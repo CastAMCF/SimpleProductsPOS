@@ -22,6 +22,11 @@ Por enquanto ainda não se encontraram bugs</br>
 - [x] Login
 - [x] Ler imagens externas
 
+## Login
+
+Nome de Utilizador: user</br>
+Palavra-passe: 456
+
 </br>Nota Final: 15
 </br>
 </br>
